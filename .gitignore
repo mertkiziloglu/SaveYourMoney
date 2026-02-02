@@ -7,3 +7,9 @@ dist/
 build/
 .vscode/
 .idea/
+
+# Firebase
+firebase-setup/serviceAccountKey.json
+firebase-setup/firebase-config.js
+.firebase/
+.firebaserc

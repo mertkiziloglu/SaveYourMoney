@@ -1,0 +1,21 @@
+{
+  "name": "saveyourmoney-firebase-setup",
+  "version": "1.0.0",
+  "description": "Firebase Firestore setup and mock data insertion for SaveYourMoney project",
+  "main": "insert-mock-data.js",
+  "scripts": {
+    "insert-mock": "node insert-mock-data.js",
+    "clear-data": "node clear-firestore.js",
+    "test-connection": "node test-connection.js"
+  },
+  "keywords": [
+    "firebase",
+    "firestore",
+    "mock-data"
+  ],
+  "author": "SaveYourMoney Team",
+  "license": "ISC",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
