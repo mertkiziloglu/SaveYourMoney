@@ -104,15 +104,15 @@
         </div>
         <div class="p-4 flex flex-col gap-6 overflow-y-auto flex-1">
             <nav class="flex flex-col gap-1">
-                <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary transition-colors" href="#">
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary transition-colors" href="index.html">
                     <span class="material-symbols-outlined text-[20px] fill-current">dashboard</span>
                     <span class="text-sm font-medium">Dashboard</span>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="deployments.html">
                     <span class="material-symbols-outlined text-[20px]">database</span>
                     <span class="text-sm font-medium">Deployments</span>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="#">
+                <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors" href="cost-analysis.html">
                     <span class="material-symbols-outlined text-[20px]">attach_money</span>
                     <span class="text-sm font-medium">Cost Analysis</span>
                 </a>
@@ -166,7 +166,58 @@
     </aside>
     <main class="flex-1 overflow-y-auto bg-slate-50 p-4 lg:p-8">
         <div class="max-w-7xl mx-auto flex flex-col gap-6" id="main-content">
-            <!-- Content will be dynamically loaded here by app-firestore.js -->
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-slate-400">analytics</span>
+                        <span class="text-sm font-medium text-slate-500">Services Analyzed</span>
+                    </div>
+                    <div class="text-3xl font-black text-slate-900" id="services-analyzed">0</div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-green-600">savings</span>
+                        <span class="text-sm font-medium text-slate-500">Monthly Savings</span>
+                    </div>
+                    <div class="text-3xl font-black text-green-600 total-savings">$0</div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-blue-600">trending_up</span>
+                        <span class="text-sm font-medium text-slate-500">Annual Savings</span>
+                    </div>
+                    <div class="text-3xl font-black text-blue-600" id="annual-savings">$0</div>
+                </div>
+            </div>
+
+            <!-- Optimization Opportunities Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Optimization Opportunities</h3>
+                        <p class="text-sm text-slate-500 recommendations-count">Resource optimization recommendations</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left" id="optimization-table">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3 font-medium">Service / Pod</th>
+                                <th class="px-6 py-3 font-medium">Current Resources</th>
+                                <th class="px-6 py-3 font-medium">Recommended</th>
+                                <th class="px-6 py-3 font-medium text-right">Savings</th>
+                                <th class="px-6 py-3 font-medium text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <!-- Rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
 </div>
@@ -192,78 +243,231 @@
 <script src="services/api.js"></script>
 <script src="services/app.js"></script>
 <script>
+    // Mock data fallback
+    const MOCK_DATA = {
+        servicesAnalyzed: 3,
+        totalMonthlySavings: 109.27,
+        totalAnnualSavings: 1311.24,
+        cpuHungryService: {
+            serviceName: 'cpu-hungry-service',
+            currentCpuRequest: '100m',
+            currentCpuLimit: '200m',
+            currentMemoryRequest: '256Mi',
+            currentMemoryLimit: '512Mi',
+            recommendedCpuRequest: '350m',
+            recommendedCpuLimit: '700m',
+            recommendedMemoryRequest: '256Mi',
+            recommendedMemoryLimit: '384Mi',
+            estimatedMonthlySavings: 35.50,
+            p95CpuUsage: 87.5,
+            p95MemoryUsage: 45.2,
+            cpuThrottlingDetected: true,
+            memoryLeakDetected: false
+        },
+        memoryLeakerService: {
+            serviceName: 'memory-leaker-service',
+            currentCpuRequest: '200m',
+            currentCpuLimit: '400m',
+            currentMemoryRequest: '256Mi',
+            currentMemoryLimit: '512Mi',
+            recommendedCpuRequest: '150m',
+            recommendedCpuLimit: '300m',
+            recommendedMemoryRequest: '384Mi',
+            recommendedMemoryLimit: '576Mi',
+            estimatedMonthlySavings: 42.15,
+            p95CpuUsage: 35.8,
+            p95MemoryUsage: 78.9,
+            cpuThrottlingDetected: false,
+            memoryLeakDetected: true
+        },
+        dbConnectionService: {
+            serviceName: 'db-connection-service',
+            currentCpuRequest: '150m',
+            currentCpuLimit: '300m',
+            currentMemoryRequest: '512Mi',
+            currentMemoryLimit: '1Gi',
+            recommendedCpuRequest: '200m',
+            recommendedCpuLimit: '400m',
+            recommendedMemoryRequest: '384Mi',
+            recommendedMemoryLimit: '576Mi',
+            estimatedMonthlySavings: 31.62,
+            p95CpuUsage: 52.3,
+            p95MemoryUsage: 62.1,
+            cpuThrottlingDetected: false,
+            memoryLeakDetected: false,
+            connectionPoolExhaustion: true
+        }
+    };
+
     // Auto-load dashboard data on page load
     document.addEventListener('DOMContentLoaded', async () => {
-        console.log('Loading dashboard data...');
+        console.log('🚀 Loading dashboard data...');
+        let data = null;
+
         try {
-            // Get dashboard data from API
-            const data = await API.getDashboard();
-            console.log('Dashboard data loaded:', data);
-
-            // Populate the dashboard with real data
-            if (data && data.servicesAnalyzed > 0) {
-                // Update summary cards
-                document.querySelector('.total-savings').textContent = '$' + Math.round(data.totalMonthlySavings * 12);
-
-                // Render optimization opportunities
-                const tbody = document.querySelector('#optimization-table tbody');
-                if (tbody) {
-                    tbody.innerHTML = '';
-
-                    // Add rows for each analyzed service
-                    ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService'].forEach(key => {
-                        if (data[key]) {
-                            const service = data[key];
-                            const row = `
-                                <tr class="hover:bg-slate-50 transition-colors group">
-                                    <td class="px-6 py-4">
-                                        <div class="flex flex-col">
-                                            <span class="text-slate-900 font-bold text-sm">${service.serviceName}</span>
-                                            <span class="text-slate-500 text-xs mt-0.5">production-cluster-01</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-slate-600 text-xs font-mono bg-slate-100 px-2 py-1 rounded inline-block border border-slate-200">
-                                            ${service.currentCpuRequest} / ${service.currentMemoryRequest}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-2">
-                                            <span class="material-symbols-outlined text-primary text-[16px]">arrow_right_alt</span>
-                                            <div class="text-primary text-xs font-mono font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">
-                                                ${service.recommendedCpuRequest} / ${service.recommendedMemoryRequest}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <span class="text-green-600 font-bold text-sm">+$${service.estimatedMonthlySavings}/mo</span>
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <button onclick="viewServiceDetail('${service.serviceName}')" class="text-primary hover:text-blue-700 hover:bg-blue-50 text-xs font-bold py-2 px-3 rounded-lg border border-transparent hover:border-blue-100 transition-all whitespace-nowrap flex items-center justify-center gap-1 mx-auto">
-                                            View Detail
-                                            <span class="material-symbols-outlined text-[16px]">visibility</span>
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
-                            tbody.innerHTML += row;
-                        }
-                    });
-                }
-
-                // Update recommendations count
-                const countElement = document.querySelector('.recommendations-count');
-                if (countElement) {
-                    countElement.textContent = `View all ${data.servicesAnalyzed} recommendations`;
-                }
+            // Try to get real data from API
+            console.log('📡 Fetching data from Analyzer Service (port 8084)...');
+            data = await API.getDashboard();
+            console.log('✅ Dashboard data loaded from API:', data);
+            
+            // If API returns empty or invalid data, use mock data
+            if (!data || !data.servicesAnalyzed || data.servicesAnalyzed === 0) {
+                console.warn('⚠️ API returned empty data, using mock data');
+                data = MOCK_DATA;
+                showToast('Using demo data', 'info');
             }
         } catch (error) {
-            console.error('Failed to load dashboard:', error);
+            console.warn('⚠️ Failed to load from API, using mock data:', error.message);
+            data = MOCK_DATA;
+            showToast('Using demo data - Analyzer Service not available', 'warning');
+        }
+
+        // Populate the dashboard with data
+        if (data && data.servicesAnalyzed > 0) {
+            // Update summary cards
+            document.getElementById('services-analyzed').textContent = data.servicesAnalyzed;
+            document.querySelector('.total-savings').textContent = '$' + Math.round(data.totalMonthlySavings);
+            document.getElementById('annual-savings').textContent = '$' + Math.round(data.totalAnnualSavings || data.totalMonthlySavings * 12);
+
+            // Render optimization opportunities
+            const tbody = document.querySelector('#optimization-table tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+
+                // Add rows for each analyzed service
+                ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService'].forEach(key => {
+                    if (data[key]) {
+                        const service = data[key];
+
+                        // Determine badge
+                        const hasIssues = service.cpuThrottlingDetected || service.memoryLeakDetected || service.connectionPoolExhaustion;
+                        const badgeClass = hasIssues
+                            ? 'bg-amber-100 text-amber-800 border-amber-200'
+                            : 'bg-green-100 text-green-800 border-green-200';
+                        const badgeText = hasIssues ? 'Needs Optimization' : 'Healthy';
+                        const badgeIcon = hasIssues ? 'warning' : 'check_circle';
+
+                        const row = `
+                            <tr class="hover:bg-slate-50 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-slate-900 font-bold text-sm">${service.serviceName}</span>
+                                        <span class="text-slate-500 text-xs mt-0.5">demo-cluster-local</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="text-slate-600 text-xs font-mono bg-slate-100 px-2 py-1 rounded inline-block border border-slate-200">
+                                            CPU: ${service.currentCpuRequest} / ${service.currentCpuLimit}
+                                        </div>
+                                        <div class="text-slate-600 text-xs font-mono bg-slate-100 px-2 py-1 rounded inline-block border border-slate-200">
+                                            RAM: ${service.currentMemoryRequest} / ${service.currentMemoryLimit}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-primary text-[16px]">arrow_forward</span>
+                                            <div class="text-primary text-xs font-mono font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                                                CPU: ${service.recommendedCpuRequest}
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-primary text-[16px]">arrow_forward</span>
+                                            <div class="text-primary text-xs font-mono font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                                                RAM: ${service.recommendedMemoryRequest}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <span class="text-green-600 font-bold text-sm">$${Math.round(service.estimatedMonthlySavings)}/mo</span>
+                                    <div class="text-xs text-slate-500 mt-1">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass} border">
+                                            <span class="material-symbols-outlined text-[14px] mr-1">${badgeIcon}</span>
+                                            ${badgeText}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <button onclick="viewServiceDetail('${service.serviceName}')" class="text-primary hover:text-blue-700 hover:bg-blue-50 text-xs font-bold py-2 px-3 rounded-lg border border-transparent hover:border-blue-100 transition-all whitespace-nowrap flex items-center justify-center gap-1 mx-auto">
+                                        View Details
+                                        <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    }
+                });
+            }
+
+            // Update recommendations count
+            const countElement = document.querySelector('.recommendations-count');
+            if (countElement) {
+                countElement.textContent = `${data.servicesAnalyzed} optimization opportunities found`;
+            }
+
+            showToast('Dashboard loaded successfully', 'success');
+        } else {
+            showNoData();
         }
     });
 
+    function showNoData() {
+        const tbody = document.querySelector('#optimization-table tbody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center gap-3">
+                            <span class="material-symbols-outlined text-6xl text-slate-300">analytics</span>
+                            <p class="text-slate-500 font-medium">No services analyzed yet</p>
+                            <p class="text-xs text-slate-400">Run analysis to see recommendations</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
     function viewServiceDetail(serviceName) {
-        alert('Service detail view for: ' + serviceName);
+        showToast(`Opening details for ${serviceName}...`, 'info');
+        window.location.href = `deployments.html?service=${serviceName}`;
+    }
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500',
+            warning: 'bg-amber-500'
+        };
+
+        const icons = {
+            success: 'check_circle',
+            error: 'error',
+            info: 'info',
+            warning: 'warning'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0`;
+        toast.innerHTML = `
+            <span class="material-symbols-outlined text-xl">${icons[type] || icons.info}</span>
+            <span class="font-medium">${message}</span>
+        `;
+
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+        setTimeout(() => {
+            toast.classList.add('translate-x-full', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 </script>
 
