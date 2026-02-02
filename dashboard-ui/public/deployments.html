@@ -5,10 +5,6 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Deployments Management - Save Your Money</title>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
@@ -68,11 +64,11 @@
                 <span class="material-symbols-outlined icon-filled">layers</span>
                 <span class="text-sm font-medium">Deployments</span>
             </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="#">
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="index.html">
                 <span class="material-symbols-outlined group-hover:text-primary">auto_awesome</span>
                 <span class="text-sm font-medium">Recommendations</span>
             </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="#">
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="cost-analysis.html">
                 <span class="material-symbols-outlined group-hover:text-primary">attach_money</span>
                 <span class="text-sm font-medium">Cost Analysis</span>
             </a>
@@ -187,23 +183,255 @@
 <!-- Toast Container -->
 <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
-<!-- Firebase Configuration -->
-<script type="module">
-    // Firebase configuration
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
-    window.firebaseConfig = firebaseConfig;
-</script>
+<!-- API Scripts -->
+<script src="services/api.js"></script>
+<script>
+    // Load deployments data from Analyzer Service
+    async function loadDeployments() {
+        try {
+            showLoading();
+            const data = await API.getDashboard();
+            console.log('✅ Deployments data loaded from Analyzer Service:', data);
 
-<!-- Application Scripts -->
-<script src="services/firestore-api.js"></script>
-<script src="services/deployments.js"></script>
+            // Update summary cards
+            const summaryCards = document.getElementById('summary-cards');
+            summaryCards.innerHTML = `
+                <div class="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-6 text-white shadow-lg relative overflow-hidden">
+                    <div class="absolute right-0 top-0 opacity-10 transform translate-x-1/4 -translate-y-1/4">
+                        <span class="material-symbols-outlined text-[150px]">dns</span>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="text-blue-100 text-sm font-medium uppercase tracking-wide">Total Active Deployments</h3>
+                        <p class="text-4xl font-black mt-2">${data.servicesAnalyzed || 0}</p>
+                        <div class="flex items-center gap-2 mt-4 text-sm text-blue-50">
+                            <span class="material-symbols-outlined text-sm">trending_up</span>
+                            <span>All services analyzed</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-surface-light dark:bg-[#1d2832] rounded-xl p-6 border border-slate-200 dark:border-[#324d67] shadow-sm relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wide">Deployments with Savings Potential</h3>
+                            <p class="text-4xl font-black mt-2 text-slate-900 dark:text-white">${data.servicesAnalyzed || 0}</p>
+                            <div class="flex items-center gap-2 mt-4 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                                <span class="material-symbols-outlined text-sm">savings</span>
+                                <span>Potential savings: ~$${Math.round(data.totalMonthlySavings || 0)}/mo</span>
+                            </div>
+                        </div>
+                        <div class="size-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                            <span class="material-symbols-outlined">auto_awesome</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Populate deployments table
+            const tbody = document.getElementById('deployments-tbody');
+            tbody.innerHTML = '';
+
+            if (data && data.servicesAnalyzed > 0) {
+                const services = [
+                    { key: 'cpuHungryService', name: 'cpu-hungry-service', cluster: 'demo-cluster-local' },
+                    { key: 'memoryLeakerService', name: 'memory-leaker-service', cluster: 'demo-cluster-local' },
+                    { key: 'dbConnectionService', name: 'db-connection-service', cluster: 'demo-cluster-local' }
+                ];
+
+                services.forEach(({ key, name, cluster }) => {
+                    if (data[key]) {
+                        const service = data[key];
+
+                        // Determine status
+                        const hasIssues = service.cpuThrottlingDetected || service.memoryLeakDetected || service.connectionPoolExhaustion;
+                        const isCritical = (service.cpuThrottlingDetected && service.p95CpuUsage > 90) ||
+                                         (service.memoryLeakDetected && service.p95MemoryUsage > 85);
+
+                        const statusClass = isCritical
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800'
+                            : hasIssues
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
+
+                        const statusText = isCritical ? 'Critical' : hasIssues ? 'Warning' : 'Healthy';
+
+                        // CPU usage color
+                        const cpuPercent = service.p95CpuUsage || 0;
+                        const cpuColor = cpuPercent > 95 ? 'text-red-600 dark:text-red-400 font-bold' :
+                                        cpuPercent > 80 ? 'text-amber-600 dark:text-amber-400 font-bold' :
+                                        'text-slate-900 dark:text-white';
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50 dark:hover:bg-[#233648]/50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-900 dark:text-white">${service.serviceName}</span>
+                                        <span class="text-xs text-slate-500">cluster: ${cluster}</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="font-mono text-slate-600 dark:text-slate-400">default</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusClass} border">
+                                        ${statusText}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col gap-1 text-xs font-mono">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-slate-500 w-8">CPU:</span>
+                                            <span class="${cpuColor}">${service.currentCpuRequest || 'N/A'} / ${service.currentCpuLimit || 'N/A'}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-slate-500 w-8">RAM:</span>
+                                            <span class="text-slate-900 dark:text-white">${service.currentMemoryRequest || 'N/A'} / ${service.currentMemoryLimit || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="relative flex h-2.5 w-2.5">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+                                        </span>
+                                        <span class="text-primary font-medium">AI Recommendation Available</span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 mt-0.5">Save approx. $${Math.round(service.estimatedMonthlySavings || 0)}/mo</div>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button onclick="viewDetail('${service.serviceName}')" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-[#324d67] shadow-sm text-sm font-medium rounded-md text-slate-700 dark:text-slate-200 bg-white dark:bg-[#111a22] hover:bg-slate-50 dark:hover:bg-[#233648] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                                        View Recommendations
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                // Update pagination
+                document.getElementById('pagination-info').innerHTML = `
+                    Showing <span class="font-medium text-slate-900 dark:text-white">1</span> to
+                    <span class="font-medium text-slate-900 dark:text-white">${data.servicesAnalyzed}</span> of
+                    <span class="font-medium text-slate-900 dark:text-white">${data.servicesAnalyzed}</span> results
+                `;
+
+                hideLoading();
+                showToast('Deployments loaded successfully', 'success');
+            } else {
+                showNoData();
+            }
+        } catch (error) {
+            console.error('❌ Failed to load deployments:', error);
+            showError(error.message);
+        }
+    }
+
+    function showLoading() {
+        const tbody = document.getElementById('deployments-tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        <p class="text-slate-500 font-medium">Loading deployments from Analyzer Service...</p>
+                        <p class="text-xs text-slate-400">Make sure Analyzer Service is running on port 8084</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function hideLoading() {
+        // Loading hidden when table is populated
+    }
+
+    function showNoData() {
+        const tbody = document.getElementById('deployments-tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center gap-3">
+                        <span class="material-symbols-outlined text-5xl text-slate-300">inbox</span>
+                        <p class="text-slate-500 font-medium">No deployments analyzed yet</p>
+                        <p class="text-xs text-slate-400">Run the analyzer to see recommendations</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    function showError(message) {
+        const tbody = document.getElementById('deployments-tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-12 text-center">
+                    <div class="flex flex-col items-center gap-4">
+                        <span class="material-symbols-outlined text-6xl text-red-300">error_outline</span>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Failed to Load Deployments</h3>
+                        <p class="text-slate-500">${message}</p>
+                        <div class="flex flex-col gap-2 text-sm text-slate-600">
+                            <p>• Make sure Analyzer Service is running on <code class="bg-slate-100 px-2 py-0.5 rounded">http://localhost:8084</code></p>
+                            <p>• Make sure demo services are running (ports 8081-8083)</p>
+                            <p>• Run analysis first: <code class="bg-slate-100 px-2 py-0.5 rounded">curl -X POST http://localhost:8084/api/analyze-all</code></p>
+                        </div>
+                        <button onclick="loadDeployments()" class="mt-4 px-6 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold transition-colors">
+                            Retry
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        showToast('Failed to connect to Analyzer Service', 'error');
+    }
+
+    async function refreshDeployments() {
+        showToast('Refreshing deployments...', 'info');
+        await loadDeployments();
+    }
+
+    function viewDetail(serviceName) {
+        showToast(`Opening details for ${serviceName}...`, 'info');
+        // Navigate to dashboard with service details
+        window.location.href = `index.html?service=${serviceName}`;
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500',
+            warning: 'bg-amber-500'
+        };
+
+        const icons = {
+            success: 'check_circle',
+            error: 'error',
+            info: 'info',
+            warning: 'warning'
+        };
+
+        const toast = document.createElement('div');
+        toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0`;
+        toast.innerHTML = `
+            <span class="material-symbols-outlined text-xl">${icons[type] || icons.info}</span>
+            <span class="font-medium">${message}</span>
+        `;
+
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+        setTimeout(() => {
+            toast.classList.add('translate-x-full', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Auto-load on page load
+    document.addEventListener('DOMContentLoaded', loadDeployments);
+</script>
 
 </body>
 </html>
