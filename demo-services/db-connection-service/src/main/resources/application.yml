@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: db-connection-service
+
+  # H2 Database Configuration
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+    # HikariCP Connection Pool - INTENTIONALLY SUBOPTIMAL
+    hikari:
+      maximum-pool-size: 5          # ❌ TOO LOW - should be 50+
+      minimum-idle: 2                # ❌ TOO LOW
+      connection-timeout: 5000       # ❌ 5 seconds - too short
+      idle-timeout: 60000            # 1 minute
+      max-lifetime: 1800000          # 30 minutes
+      leak-detection-threshold: 10000 # 10 seconds - will show leaks
+      pool-name: HikariPool-DBConnection
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # H2 Console
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8083
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    com.hackathon.dbconnection: INFO
+    org.springframework: WARN
+    com.zaxxer.hikari: DEBUG  # Show connection pool details
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

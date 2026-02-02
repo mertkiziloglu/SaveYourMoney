@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: analyzer-service
+
+  # H2 Database Configuration
+  datasource:
+    url: jdbc:h2:mem:analyzerdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # H2 Console
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+server:
+  port: 8084
+
+# Analyzer Configuration
+analyzer:
+  services:
+    cpu-hungry:
+      url: http://localhost:8081
+    memory-leaker:
+      url: http://localhost:8082
+    db-connection:
+      url: http://localhost:8083
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.hackathon.analyzer: INFO
+    org.springframework: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

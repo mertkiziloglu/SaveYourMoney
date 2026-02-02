@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: cpu-hungry-service
+
+server:
+  port: 8081
+  tomcat:
+    threads:
+      max: 50        # Suboptimal - should be higher for CPU-intensive work
+      min-spare: 5
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# Logging
+logging:
+  level:
+    com.hackathon.cpuhungry: INFO
+    org.springframework: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

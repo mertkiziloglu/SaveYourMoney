@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: code-generator-service
+
+server:
+  port: 8085
+
+# Azure DevOps Configuration
+azure:
+  devops:
+    organization: INGCDaaS
+    project: IngOne
+    repository: P35043-global-hackathon-2025
+    team: saveyourmoney
+    base-url: https://dev.azure.com
+    # IMPORTANT: Set this via environment variable for security
+    # export AZURE_DEVOPS_PAT=your-personal-access-token
+    pat: ${AZURE_DEVOPS_PAT:}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    com.hackathon.codegen: INFO
+    org.springframework: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

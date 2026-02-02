@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>SaveYourMoney - AI Resource Optimization</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans:wght@400;500;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+    <!-- Material Symbols -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1d2832",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["Fira Code", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-filled {
+            font-variation-settings: 'FILL' 1;
+        }
+        .code-scroll::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .code-scroll::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .code-scroll::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display transition-colors duration-200">
+
+<div class="flex h-screen w-full overflow-hidden">
+    <!-- Side Navigation -->
+    <aside class="hidden md:flex flex-col w-64 h-full bg-surface-light dark:bg-[#111a22] border-r border-slate-200 dark:border-[#233648] shrink-0 z-20">
+        <div class="p-6 flex items-center gap-3">
+            <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                <span class="material-symbols-outlined text-xl">savings</span>
+            </div>
+            <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">SaveYourMoney</span>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="#" onclick="showDashboard(); return false;">
+                <span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:bg-[#233648] dark:text-white" href="#" id="recommendations-link">
+                <span class="material-symbols-outlined icon-filled">auto_awesome</span>
+                <span class="text-sm font-medium">Recommendations</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="#">
+                <span class="material-symbols-outlined group-hover:text-primary">attach_money</span>
+                <span class="text-sm font-medium">Cost Analysis</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="#" onclick="toggleTheme(); return false;">
+                <span class="material-symbols-outlined group-hover:text-primary">dark_mode</span>
+                <span class="text-sm font-medium">Toggle Theme</span>
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-200 dark:border-[#233648]">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                    DT
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-slate-900 dark:text-white">DevOps Team</span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400">team@company.com</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Layout -->
+    <div class="flex-1 flex flex-col h-full relative overflow-hidden">
+        <!-- Top Navigation -->
+        <header class="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-[#111a22] border-b border-slate-200 dark:border-[#233648] shrink-0">
+            <div class="flex items-center gap-4">
+                <button class="md:hidden text-slate-500 hover:text-primary">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <div class="hidden md:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <span>Clusters</span>
+                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                    <span>local-cluster</span>
+                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                    <span class="text-slate-900 dark:text-white font-medium" id="breadcrumb-service">All Services</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors" onclick="refreshData()">
+                    <span class="material-symbols-outlined">refresh</span>
+                </button>
+                <button class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors relative">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111a22]" id="notification-badge" style="display:none;"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 lg:px-10 pb-20">
+            <div class="max-w-[1280px] mx-auto flex flex-col gap-6" id="main-content">
+                <!-- Content will be dynamically loaded here -->
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+<!-- Scripts -->
+<script src="services/api.js"></script>
+<script src="services/charts.js"></script>
+<script src="services/app.js"></script>
+
+<script>
+// Initialize theme
+const savedTheme = localStorage.getItem('theme') || 'light';
+if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark');
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    showToast(isDark ? 'Dark mode enabled' : 'Light mode enabled', 'info');
+}
+
+function showDashboard() {
+    loadDashboard();
+}
+
+// Auto-load on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadDashboard();
+});
+</script>
+
+</body>
+</html>
