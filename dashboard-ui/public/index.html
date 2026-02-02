@@ -189,8 +189,83 @@
 </script>
 
 <!-- Application Scripts -->
-<script src="services/firestore-api.js"></script>
-<script src="services/app-firestore.js"></script>
+<script src="services/api.js"></script>
+<script src="services/app.js"></script>
+<script>
+    // Auto-load dashboard data on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('Loading dashboard data...');
+        try {
+            // Get dashboard data from API
+            const data = await API.getDashboard();
+            console.log('Dashboard data loaded:', data);
+
+            // Populate the dashboard with real data
+            if (data && data.servicesAnalyzed > 0) {
+                // Update summary cards
+                document.querySelector('.total-savings').textContent = '$' + Math.round(data.totalMonthlySavings * 12);
+
+                // Render optimization opportunities
+                const tbody = document.querySelector('#optimization-table tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+
+                    // Add rows for each analyzed service
+                    ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService'].forEach(key => {
+                        if (data[key]) {
+                            const service = data[key];
+                            const row = `
+                                <tr class="hover:bg-slate-50 transition-colors group">
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="text-slate-900 font-bold text-sm">${service.serviceName}</span>
+                                            <span class="text-slate-500 text-xs mt-0.5">production-cluster-01</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="text-slate-600 text-xs font-mono bg-slate-100 px-2 py-1 rounded inline-block border border-slate-200">
+                                            ${service.currentCpuRequest} / ${service.currentMemoryRequest}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <span class="material-symbols-outlined text-primary text-[16px]">arrow_right_alt</span>
+                                            <div class="text-primary text-xs font-mono font-bold bg-blue-50 px-2 py-1 rounded border border-blue-100">
+                                                ${service.recommendedCpuRequest} / ${service.recommendedMemoryRequest}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span class="text-green-600 font-bold text-sm">+$${service.estimatedMonthlySavings}/mo</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <button onclick="viewServiceDetail('${service.serviceName}')" class="text-primary hover:text-blue-700 hover:bg-blue-50 text-xs font-bold py-2 px-3 rounded-lg border border-transparent hover:border-blue-100 transition-all whitespace-nowrap flex items-center justify-center gap-1 mx-auto">
+                                            View Detail
+                                            <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            tbody.innerHTML += row;
+                        }
+                    });
+                }
+
+                // Update recommendations count
+                const countElement = document.querySelector('.recommendations-count');
+                if (countElement) {
+                    countElement.textContent = `View all ${data.servicesAnalyzed} recommendations`;
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load dashboard:', error);
+        }
+    });
+
+    function viewServiceDetail(serviceName) {
+        alert('Service detail view for: ' + serviceName);
+    }
+</script>
 
 </body>
 </html>

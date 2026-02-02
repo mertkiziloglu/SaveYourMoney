@@ -300,93 +300,486 @@ const mockData = {
     }
   ],
 
-  // Deployments (Full deployment info)
+  // Deployments (Full deployment info) - 15 deployments
   deployments: [
     {
-      id: 'backend-payment-service',
-      name: 'backend-payment-service',
-      namespace: 'production-cluster-01',
-      cluster: 'prod-cluster-east-1',
+      id: 'payment-gateway-v2',
+      name: 'payment-gateway-v2',
+      namespace: 'prod',
+      cluster: 'aws-useast-1',
       environment: 'Production',
       replicas: 3,
       currentResources: {
-        cpuRequest: '4',
-        cpuLimit: '4',
-        memoryRequest: '8Gi',
-        memoryLimit: '8Gi'
+        cpuRequest: '350m',
+        cpuLimit: '1000m',
+        memoryRequest: '620Mi',
+        memoryLimit: '2Gi'
       },
       recommendedResources: {
-        cpuRequest: '2',
-        cpuLimit: '2',
-        memoryRequest: '4Gi',
-        memoryLimit: '4Gi'
+        cpuRequest: '500m',
+        cpuLimit: '800m',
+        memoryRequest: '800Mi',
+        memoryLimit: '1.5Gi'
       },
       metrics: {
-        cpuUsagePercent: 45,
-        memoryUsagePercent: 52,
-        requestsPerSecond: 1250,
-        errorRate: 0.02
+        cpuUsagePercent: 35,
+        memoryUsagePercent: 31,
+        requestsPerSecond: 850,
+        errorRate: 0.01
       },
-      status: 'running',
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 250,
       lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-15')),
       createdAt: admin.firestore.Timestamp.now()
     },
     {
-      id: 'frontend-dashboard-ui',
-      name: 'frontend-dashboard-ui',
-      namespace: 'production-cluster-01',
-      cluster: 'prod-cluster-east-1',
+      id: 'auth-service',
+      name: 'auth-service',
+      namespace: 'prod',
+      cluster: 'aws-useast-1',
       environment: 'Production',
       replicas: 2,
       currentResources: {
-        cpuRequest: '2',
-        cpuLimit: '2',
-        memoryRequest: '4Gi',
+        cpuRequest: '1800m',
+        cpuLimit: '2000m',
+        memoryRequest: '1.2Gi',
         memoryLimit: '4Gi'
       },
       recommendedResources: {
-        cpuRequest: '0.5',
-        cpuLimit: '0.5',
-        memoryRequest: '1Gi',
-        memoryLimit: '1Gi'
+        cpuRequest: '1800m',
+        cpuLimit: '2000m',
+        memoryRequest: '1.2Gi',
+        memoryLimit: '4Gi'
       },
       metrics: {
-        cpuUsagePercent: 18,
-        memoryUsagePercent: 25,
-        requestsPerSecond: 450,
-        errorRate: 0.01
+        cpuUsagePercent: 90,
+        memoryUsagePercent: 30,
+        requestsPerSecond: 1500,
+        errorRate: 0.02
       },
-      status: 'running',
+      status: 'Warning',
+      healthStatus: 'warning',
+      hasRecommendation: false,
+      potentialSavings: 0,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-18')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'notification-worker',
+      name: 'notification-worker',
+      namespace: 'staging',
+      cluster: 'gcp-europe-west',
+      environment: 'Staging',
+      replicas: 2,
+      currentResources: {
+        cpuRequest: '50m',
+        cpuLimit: '500m',
+        memoryRequest: '128Mi',
+        memoryLimit: '1Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '100m',
+        cpuLimit: '300m',
+        memoryRequest: '256Mi',
+        memoryLimit: '512Mi'
+      },
+      metrics: {
+        cpuUsagePercent: 10,
+        memoryUsagePercent: 12,
+        requestsPerSecond: 45,
+        errorRate: 0.001
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 85,
       lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-20')),
       createdAt: admin.firestore.Timestamp.now()
     },
     {
-      id: 'redis-cache-worker',
-      name: 'redis-cache-worker',
-      namespace: 'dev-cluster-west-2',
-      cluster: 'dev-cluster-west-2',
-      environment: 'Development',
-      replicas: 1,
+      id: 'analytics-ingest',
+      name: 'analytics-ingest',
+      namespace: 'prod',
+      cluster: 'aws-useast-1',
+      environment: 'Production',
+      replicas: 4,
       currentResources: {
-        cpuRequest: '8',
-        cpuLimit: '8',
-        memoryRequest: '32Gi',
-        memoryLimit: '32Gi'
+        cpuRequest: '1200m',
+        cpuLimit: '4000m',
+        memoryRequest: '3Gi',
+        memoryLimit: '8Gi'
       },
       recommendedResources: {
-        cpuRequest: '4',
-        cpuLimit: '4',
-        memoryRequest: '16Gi',
+        cpuRequest: '1500m',
+        cpuLimit: '2500m',
+        memoryRequest: '4Gi',
+        memoryLimit: '6Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 30,
+        memoryUsagePercent: 37,
+        requestsPerSecond: 2100,
+        errorRate: 0.005
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 420,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-12')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'frontend-react',
+      name: 'frontend-react',
+      namespace: 'prod',
+      cluster: 'aws-useast-1',
+      environment: 'Production',
+      replicas: 3,
+      currentResources: {
+        cpuRequest: '100m',
+        cpuLimit: '100m',
+        memoryRequest: '250Mi',
+        memoryLimit: '256Mi'
+      },
+      recommendedResources: {
+        cpuRequest: '200m',
+        cpuLimit: '400m',
+        memoryRequest: '512Mi',
+        memoryLimit: '1Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 100,
+        memoryUsagePercent: 97,
+        requestsPerSecond: 3500,
+        errorRate: 0.08
+      },
+      status: 'Critical',
+      healthStatus: 'critical',
+      hasRecommendation: true,
+      potentialSavings: -150,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-05')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'backend-api-v1',
+      name: 'backend-api-v1',
+      namespace: 'prod',
+      cluster: 'aws-useast-1',
+      environment: 'Production',
+      replicas: 5,
+      currentResources: {
+        cpuRequest: '500m',
+        cpuLimit: '1000m',
+        memoryRequest: '1Gi',
+        memoryLimit: '2Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '300m',
+        cpuLimit: '600m',
+        memoryRequest: '768Mi',
+        memoryLimit: '1.5Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 28,
+        memoryUsagePercent: 45,
+        requestsPerSecond: 1850,
+        errorRate: 0.015
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 340,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-22')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'search-service',
+      name: 'search-service',
+      namespace: 'prod',
+      cluster: 'gcp-europe-west',
+      environment: 'Production',
+      replicas: 3,
+      currentResources: {
+        cpuRequest: '2000m',
+        cpuLimit: '4000m',
+        memoryRequest: '4Gi',
+        memoryLimit: '8Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '1500m',
+        cpuLimit: '3000m',
+        memoryRequest: '3Gi',
+        memoryLimit: '6Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 42,
+        memoryUsagePercent: 55,
+        requestsPerSecond: 950,
+        errorRate: 0.012
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 520,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-14')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'queue-processor',
+      name: 'queue-processor',
+      namespace: 'prod',
+      cluster: 'azure-asia-south',
+      environment: 'Production',
+      replicas: 6,
+      currentResources: {
+        cpuRequest: '800m',
+        cpuLimit: '1500m',
+        memoryRequest: '2Gi',
+        memoryLimit: '4Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '600m',
+        cpuLimit: '1200m',
+        memoryRequest: '1.5Gi',
+        memoryLimit: '3Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 38,
+        memoryUsagePercent: 42,
+        requestsPerSecond: 0,
+        errorRate: 0.008
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 380,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-19')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'email-service',
+      name: 'email-service',
+      namespace: 'prod',
+      cluster: 'aws-useast-1',
+      environment: 'Production',
+      replicas: 2,
+      currentResources: {
+        cpuRequest: '200m',
+        cpuLimit: '500m',
+        memoryRequest: '512Mi',
+        memoryLimit: '1Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '150m',
+        cpuLimit: '300m',
+        memoryRequest: '384Mi',
+        memoryLimit: '768Mi'
+      },
+      metrics: {
+        cpuUsagePercent: 22,
+        memoryUsagePercent: 35,
+        requestsPerSecond: 120,
+        errorRate: 0.003
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 95,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-21')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'reporting-engine',
+      name: 'reporting-engine',
+      namespace: 'prod',
+      cluster: 'gcp-europe-west',
+      environment: 'Production',
+      replicas: 2,
+      currentResources: {
+        cpuRequest: '1000m',
+        cpuLimit: '2000m',
+        memoryRequest: '2Gi',
+        memoryLimit: '4Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '800m',
+        cpuLimit: '1500m',
+        memoryRequest: '1.5Gi',
+        memoryLimit: '3Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 45,
+        memoryUsagePercent: 48,
+        requestsPerSecond: 85,
+        errorRate: 0.01
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 210,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-16')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'cache-redis',
+      name: 'cache-redis',
+      namespace: 'prod',
+      cluster: 'aws-useast-1',
+      environment: 'Production',
+      replicas: 3,
+      currentResources: {
+        cpuRequest: '500m',
+        cpuLimit: '1000m',
+        memoryRequest: '4Gi',
+        memoryLimit: '8Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '300m',
+        cpuLimit: '600m',
+        memoryRequest: '3Gi',
+        memoryLimit: '6Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 25,
+        memoryUsagePercent: 52,
+        requestsPerSecond: 5500,
+        errorRate: 0.001
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 290,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-13')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'data-pipeline',
+      name: 'data-pipeline',
+      namespace: 'staging',
+      cluster: 'gcp-europe-west',
+      environment: 'Staging',
+      replicas: 1,
+      currentResources: {
+        cpuRequest: '3000m',
+        cpuLimit: '6000m',
+        memoryRequest: '8Gi',
         memoryLimit: '16Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '2000m',
+        cpuLimit: '4000m',
+        memoryRequest: '6Gi',
+        memoryLimit: '12Gi'
       },
       metrics: {
         cpuUsagePercent: 35,
         memoryUsagePercent: 48,
-        requestsPerSecond: 850,
+        requestsPerSecond: 0,
         errorRate: 0.005
       },
-      status: 'running',
-      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-10')),
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 650,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-11')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'websocket-server',
+      name: 'websocket-server',
+      namespace: 'prod',
+      cluster: 'azure-asia-south',
+      environment: 'Production',
+      replicas: 4,
+      currentResources: {
+        cpuRequest: '400m',
+        cpuLimit: '800m',
+        memoryRequest: '1Gi',
+        memoryLimit: '2Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '600m',
+        cpuLimit: '1200m',
+        memoryRequest: '1.5Gi',
+        memoryLimit: '3Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 72,
+        memoryUsagePercent: 68,
+        requestsPerSecond: 0,
+        errorRate: 0.015
+      },
+      status: 'Warning',
+      healthStatus: 'warning',
+      hasRecommendation: true,
+      potentialSavings: -180,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-17')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'image-processor',
+      name: 'image-processor',
+      namespace: 'dev',
+      cluster: 'aws-useast-1',
+      environment: 'Development',
+      replicas: 1,
+      currentResources: {
+        cpuRequest: '1500m',
+        cpuLimit: '3000m',
+        memoryRequest: '3Gi',
+        memoryLimit: '6Gi'
+      },
+      recommendedResources: {
+        cpuRequest: '1000m',
+        cpuLimit: '2000m',
+        memoryRequest: '2Gi',
+        memoryLimit: '4Gi'
+      },
+      metrics: {
+        cpuUsagePercent: 32,
+        memoryUsagePercent: 40,
+        requestsPerSecond: 25,
+        errorRate: 0.002
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: true,
+      potentialSavings: 310,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-23')),
+      createdAt: admin.firestore.Timestamp.now()
+    },
+    {
+      id: 'scheduler-cron',
+      name: 'scheduler-cron',
+      namespace: 'prod',
+      cluster: 'gcp-europe-west',
+      environment: 'Production',
+      replicas: 1,
+      currentResources: {
+        cpuRequest: '100m',
+        cpuLimit: '200m',
+        memoryRequest: '256Mi',
+        memoryLimit: '512Mi'
+      },
+      recommendedResources: {
+        cpuRequest: '100m',
+        cpuLimit: '200m',
+        memoryRequest: '256Mi',
+        memoryLimit: '512Mi'
+      },
+      metrics: {
+        cpuUsagePercent: 15,
+        memoryUsagePercent: 28,
+        requestsPerSecond: 0,
+        errorRate: 0
+      },
+      status: 'Healthy',
+      healthStatus: 'healthy',
+      hasRecommendation: false,
+      potentialSavings: 0,
+      lastDeployed: admin.firestore.Timestamp.fromDate(new Date('2024-01-09')),
       createdAt: admin.firestore.Timestamp.now()
     }
   ]
