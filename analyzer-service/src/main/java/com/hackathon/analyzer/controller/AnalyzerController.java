@@ -4,6 +4,11 @@ import com.hackathon.analyzer.collector.MetricsCollectorService;
 import com.hackathon.analyzer.model.AnalysisResult;
 import com.hackathon.analyzer.model.ResourceRecommendation;
 import com.hackathon.analyzer.service.ResourceAnalyzerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,11 +23,14 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Tag(name = "Analyzer", description = "AI-powered resource analysis and optimization recommendations")
 public class AnalyzerController {
 
     private final ResourceAnalyzerService analyzerService;
     private final MetricsCollectorService metricsCollector;
 
+    @Operation(summary = "Health Check", description = "Check if the analyzer service is running")
+    @ApiResponse(responseCode = "200", description = "Service is healthy")
     @GetMapping("/health")
     public ResponseEntity<Map<String, String>> health() {
         Map<String, String> response = new HashMap<>();
@@ -31,11 +39,15 @@ public class AnalyzerController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Analyze a specific service and get recommendations
-     */
+    @Operation(summary = "Analyze Service", description = "Analyze a specific microservice and generate optimization recommendations")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Analysis completed successfully"),
+        @ApiResponse(responseCode = "404", description = "Service not found")
+    })
     @PostMapping("/analyze/{serviceName}")
-    public ResponseEntity<ResourceRecommendation> analyzeService(@PathVariable String serviceName) {
+    public ResponseEntity<ResourceRecommendation> analyzeService(
+            @Parameter(description = "Service name (e.g., cpu-hungry-service)")
+            @PathVariable String serviceName) {
         log.info("Received analysis request for service: {}", serviceName);
 
         ResourceRecommendation recommendation = analyzerService.analyzeService(serviceName);

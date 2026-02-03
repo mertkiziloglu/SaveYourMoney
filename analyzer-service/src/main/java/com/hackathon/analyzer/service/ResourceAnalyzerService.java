@@ -352,6 +352,31 @@ public class ResourceAnalyzerService {
     }
 
     /**
+     * Calculate estimated monthly savings
+     */
+    private Double calculateSavings(String serviceName, DescriptiveStatistics cpuStats, DescriptiveStatistics memoryStats) {
+        // Estimate current resource allocation (conservative estimates)
+        double currentCpuCores = 1.0; // Assume 1 vCPU default
+        double currentMemoryGb = 2.0; // Assume 2GB default
+
+        // Calculate recommended resources based on P95 usage with safety margin
+        double p95Cpu = cpuStats.getPercentile(95);
+        double p95Memory = memoryStats.getPercentile(95);
+
+        double recommendedCpuCores = Math.ceil((p95Cpu / 100.0) * (1 + SAFETY_MARGIN) * 10) / 10.0;
+        double recommendedMemoryGb = Math.ceil((p95Memory / 100.0) * (1 + SAFETY_MARGIN) * 10) / 10.0;
+
+        // Calculate costs
+        double currentMonthlyCost = (currentCpuCores * COST_PER_CPU_CORE_MONTH) +
+                                   (currentMemoryGb * COST_PER_GB_MEMORY_MONTH);
+        double recommendedMonthlyCost = (recommendedCpuCores * COST_PER_CPU_CORE_MONTH) +
+                                       (recommendedMemoryGb * COST_PER_GB_MEMORY_MONTH);
+
+        double savings = currentMonthlyCost - recommendedMonthlyCost;
+        return Math.max(0.0, Math.round(savings * 100.0) / 100.0); // Round to 2 decimals, ensure non-negative
+    }
+
+    /**
      * Calculate confidence score based on data quality
      */
     private Double calculateConfidence(int sampleCount, DescriptiveStatistics cpuStats, DescriptiveStatistics memoryStats) {

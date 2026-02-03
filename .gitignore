@@ -13,3 +13,14 @@ firebase-setup/serviceAccountKey.json
 firebase-setup/firebase-config.js
 .firebase/
 .firebaserc
+
+# Maven
+target/
+*.class
+.classpath
+.project
+.settings/
+.factorypath
+
+# Claude
+.claude/settings.local.json
