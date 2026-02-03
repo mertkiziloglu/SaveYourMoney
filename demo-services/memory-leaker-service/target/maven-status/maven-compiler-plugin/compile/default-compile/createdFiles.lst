@@ -1,0 +1,4 @@
+com/hackathon/memoryleaker/MemoryLeakerApplication.class
+com/hackathon/memoryleaker/service/MemoryLeakService.class
+com/hackathon/memoryleaker/controller/MemoryLeakerController.class
+com/hackathon/memoryleaker/model/CachedData.class

@@ -1,7 +1,0 @@
-com/hackathon/analyzer/model/ResourceRecommendation$ConnectionPoolConfig.class
-com/hackathon/analyzer/model/ResourceRecommendation$KubernetesResources.class
-com/hackathon/analyzer/AnalyzerApplication.class
-com/hackathon/analyzer/model/ResourceRecommendation.class
-com/hackathon/analyzer/model/ResourceRecommendation$CostAnalysis.class
-com/hackathon/analyzer/model/ResourceRecommendation$ThreadPoolConfig.class
-com/hackathon/analyzer/model/ResourceRecommendation$JvmConfiguration.class

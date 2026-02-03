@@ -1,6 +1,8 @@
 package com.hackathon.analyzer.controller;
 
 import com.hackathon.analyzer.collector.MetricsCollectorService;
+import com.hackathon.analyzer.ml.CostPredictionService;
+import com.hackathon.analyzer.ml.WorkloadClassificationService;
 import com.hackathon.analyzer.model.*;
 import com.hackathon.analyzer.service.ResourceAnalyzerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,10 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -27,6 +27,8 @@ public class AnalyzerController {
 
     private final ResourceAnalyzerService analyzerService;
     private final MetricsCollectorService metricsCollector;
+    private final CostPredictionService costPredictionService;
+    private final WorkloadClassificationService workloadClassificationService;
 
     @Operation(summary = "Health Check", description = "Check if the analyzer service is running")
     @ApiResponse(responseCode = "200", description = "Service is healthy")
@@ -38,6 +40,9 @@ public class AnalyzerController {
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Analyze a specific service and get recommendations
+     */
     @Operation(summary = "Analyze Service", description = "Analyze a specific microservice and generate optimization recommendations")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Analysis completed successfully"),
@@ -167,118 +172,6 @@ public class AnalyzerController {
         return ResponseEntity.ok(dashboard);
     }
 
-    // ========== Anomaly Detection Endpoints ==========
-
-    @Operation(summary = "Get Active Anomalies", description = "Get all active (unresolved) anomalies across all services")
-    @ApiResponse(responseCode = "200", description = "Active anomalies retrieved successfully")
-    @GetMapping("/anomalies/active")
-    public ResponseEntity<List<Anomaly>> getActiveAnomalies() {
-        List<Anomaly> activeAnomalies = anomalyRepository.findByResolvedFalse();
-        log.info("Retrieved {} active anomalies", activeAnomalies.size());
-        return ResponseEntity.ok(activeAnomalies);
-    }
-
-    @Operation(summary = "Get Service Anomalies", description = "Get recent anomalies for a specific service")
-    @ApiResponse(responseCode = "200", description = "Service anomalies retrieved successfully")
-    @GetMapping("/anomalies/{serviceName}")
-    public ResponseEntity<List<Anomaly>> getServiceAnomalies(
-            @Parameter(description = "Service name") @PathVariable String serviceName,
-            @RequestParam(defaultValue = "50") int limit) {
-
-        List<Anomaly> anomalies = anomalyRepository.findByServiceNameOrderByDetectedAtDesc(
-                serviceName, PageRequest.of(0, limit));
-
-        log.info("Retrieved {} anomalies for service: {}", anomalies.size(), serviceName);
-        return ResponseEntity.ok(anomalies);
-    }
-
-    @Operation(summary = "Get Anomaly Statistics", description = "Get aggregated anomaly statistics")
-    @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully")
-    @GetMapping("/anomalies/stats")
-    public ResponseEntity<Map<String, Object>> getAnomalyStats() {
-        Map<String, Object> stats = new HashMap<>();
-
-        // Total counts
-        long totalAnomalies = anomalyRepository.count();
-        long activeAnomalies = anomalyRepository.countActiveAnomalies();
-
-        // Per-service counts
-        long cpuHungryActive = anomalyRepository.countByServiceNameAndResolvedFalse("cpu-hungry-service");
-        long memoryLeakerActive = anomalyRepository.countByServiceNameAndResolvedFalse("memory-leaker-service");
-        long dbConnectionActive = anomalyRepository.countByServiceNameAndResolvedFalse("db-connection-service");
-
-        // Recent anomalies (last hour)
-        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
-        List<Anomaly> recentAnomalies = anomalyRepository.findByDetectedAtAfter(oneHourAgo);
-
-        // Count by severity
-        Map<String, Long> bySeverity = new HashMap<>();
-        for (AnomalySeverity severity : AnomalySeverity.values()) {
-            long count = recentAnomalies.stream()
-                    .filter(a -> a.getSeverity() == severity && !a.getResolved())
-                    .count();
-            bySeverity.put(severity.name(), count);
-        }
-
-        stats.put("totalAnomalies", totalAnomalies);
-        stats.put("activeAnomalies", activeAnomalies);
-        stats.put("recentAnomalies", recentAnomalies.size());
-        stats.put("cpuHungryServiceActive", cpuHungryActive);
-        stats.put("memoryLeakerServiceActive", memoryLeakerActive);
-        stats.put("dbConnectionServiceActive", dbConnectionActive);
-        stats.put("bySeverity", bySeverity);
-
-        return ResponseEntity.ok(stats);
-    }
-
-    @Operation(summary = "Resolve Anomaly", description = "Mark an anomaly as resolved")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Anomaly resolved successfully"),
-        @ApiResponse(responseCode = "404", description = "Anomaly not found")
-    })
-    @PostMapping("/anomalies/{id}/resolve")
-    public ResponseEntity<Map<String, String>> resolveAnomaly(
-            @Parameter(description = "Anomaly ID") @PathVariable Long id) {
-
-        Optional<Anomaly> anomalyOpt = anomalyRepository.findById(id);
-
-        if (anomalyOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Anomaly anomaly = anomalyOpt.get();
-        anomaly.setResolved(true);
-        anomaly.setResolvedAt(LocalDateTime.now());
-        anomalyRepository.save(anomaly);
-
-        Map<String, String> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "Anomaly resolved successfully");
-
-        log.info("Resolved anomaly ID: {} for service: {}", id, anomaly.getServiceName());
-        return ResponseEntity.ok(response);
-    }
-
-    @Operation(summary = "Get Anomaly Timeline", description = "Get anomalies for a service within a time range")
-    @ApiResponse(responseCode = "200", description = "Timeline retrieved successfully")
-    @GetMapping("/anomalies/timeline/{serviceName}")
-    public ResponseEntity<List<Anomaly>> getAnomalyTimeline(
-            @Parameter(description = "Service name") @PathVariable String serviceName,
-            @RequestParam(required = false) Integer hoursAgo) {
-
-        int hours = hoursAgo != null ? hoursAgo : 24; // Default to last 24 hours
-        LocalDateTime startDate = LocalDateTime.now().minusHours(hours);
-        LocalDateTime endDate = LocalDateTime.now();
-
-        List<Anomaly> anomalies = anomalyRepository.findByServiceNameAndDateRange(
-                serviceName, startDate, endDate);
-
-        log.info("Retrieved {} anomalies for {} in the last {} hours",
-                anomalies.size(), serviceName, hours);
-
-        return ResponseEntity.ok(anomalies);
-    }
-
     // ========== AI/ML Prediction Endpoints ==========
 
     @Operation(
@@ -306,10 +199,10 @@ public class AnalyzerController {
 
         CostForecast forecast = costPredictionService.predictCosts(serviceName, daysAhead);
 
-        log.info("Cost prediction completed for {}: ${:.2f}/month → ${:.2f}/month ({} trend)",
+        log.info("Cost prediction completed for {}: ${} current → ${} predicted ({})",
                 serviceName,
-                forecast.getCurrentMonthlyCost(),
-                forecast.getPredictedMonthlyCost(),
+                String.format("%.2f", forecast.getCurrentMonthlyCost()),
+                String.format("%.2f", forecast.getPredictedMonthlyCost()),
                 forecast.getTrend());
 
         return ResponseEntity.ok(forecast);
@@ -331,10 +224,10 @@ public class AnalyzerController {
 
         WorkloadProfile profile = workloadClassificationService.classifyWorkload(serviceName);
 
-        log.info("Workload classified for {}: {} pattern with {:.1f}% confidence - Strategy: {}",
+        log.info("Workload classified for {}: {} pattern with {}% confidence - Strategy: {}",
                 serviceName,
                 profile.getPattern(),
-                profile.getConfidenceScore(),
+                String.format("%.1f", profile.getConfidenceScore()),
                 profile.getRecommendedStrategy());
 
         return ResponseEntity.ok(profile);
@@ -373,19 +266,14 @@ public class AnalyzerController {
             insights.put("workloadProfile", null);
         }
 
-        // 3. Active Anomalies
-        List<Anomaly> activeAnomalies = anomalyRepository.findByServiceNameAndResolvedFalse(serviceName);
-        insights.put("activeAnomalies", activeAnomalies);
-        insights.put("anomalyCount", activeAnomalies.size());
-
-        // 4. Latest Resource Recommendation
+        // 3. Latest Resource Recommendation
         Optional<AnalysisResult> latestAnalysis = analyzerService.getLatestAnalysis(serviceName);
         latestAnalysis.ifPresent(analysis -> {
             insights.put("resourceRecommendation", analysis.getRecommendation());
             insights.put("estimatedSavings", analysis.getEstimatedMonthlySavings());
         });
 
-        // 5. AI Summary
+        // 4. AI Summary
         Map<String, String> aiSummary = new HashMap<>();
         aiSummary.put("serviceName", serviceName);
         aiSummary.put("generatedAt", LocalDateTime.now().toString());
@@ -393,8 +281,7 @@ public class AnalyzerController {
 
         insights.put("summary", aiSummary);
 
-        log.info("AI insights generated for {}: {} active anomalies, cost trend available",
-                serviceName, activeAnomalies.size());
+        log.info("AI insights generated for {}", serviceName);
 
         return ResponseEntity.ok(insights);
     }
@@ -435,10 +322,6 @@ public class AnalyzerController {
                 serviceData.put("recommendedStrategy", profile.getRecommendedStrategy());
                 serviceData.put("estimatedSavings", profile.getEstimatedSavings());
 
-                // Anomaly count
-                long anomalyCount = anomalyRepository.countByServiceNameAndResolvedFalse(serviceName);
-                serviceData.put("activeAnomalies", anomalyCount);
-
             } catch (Exception e) {
                 log.error("Error generating insights for {}: {}", serviceName, e.getMessage());
                 serviceData.put("error", "Unable to generate insights");
@@ -452,11 +335,11 @@ public class AnalyzerController {
         overview.put("totalPredictedMonthlyCost", totalPredictedCosts);
         overview.put("costChangePercentage",
             totalCurrentCosts > 0 ? ((totalPredictedCosts - totalCurrentCosts) / totalCurrentCosts * 100) : 0.0);
-        overview.put("totalActiveAnomalies", anomalyRepository.countActiveAnomalies());
         overview.put("generatedAt", LocalDateTime.now());
 
-        log.info("AI overview generated: ${:.2f} current → ${:.2f} predicted",
-                totalCurrentCosts, totalPredictedCosts);
+        log.info("AI overview generated: ${} current → ${} predicted",
+                String.format("%.2f", totalCurrentCosts),
+                String.format("%.2f", totalPredictedCosts));
 
         return ResponseEntity.ok(overview);
     }

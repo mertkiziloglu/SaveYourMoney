@@ -71,18 +71,16 @@ public class InitialConfigurationService {
                 .cpuLimit(baseline.cpuLimitMillis + "m")
                 .memoryRequest(baseline.memoryRequestMb + "Mi")
                 .memoryLimit(baseline.memoryLimitMb + "Mi")
-                .replicas(baseline.replicas)
                 .build();
-        recommendation.setKubernetesResources(k8s);
+        recommendation.setKubernetes(k8s);
 
         // JVM configuration
         ResourceRecommendation.JvmConfiguration jvm = ResourceRecommendation.JvmConfiguration.builder()
-                .heapSizeMin(baseline.jvmHeapMinMb + "m")
-                .heapSizeMax(baseline.jvmHeapMaxMb + "m")
-                .gcAlgorithm(baseline.gcAlgorithm)
-                .gcThreads(baseline.gcThreads)
+                .xms(baseline.jvmHeapMinMb + "m")
+                .xmx(baseline.jvmHeapMaxMb + "m")
+                .gcType(baseline.gcAlgorithm)
                 .build();
-        recommendation.setJvmConfiguration(jvm);
+        recommendation.setJvm(jvm);
 
         // Connection pool
         ResourceRecommendation.ConnectionPoolConfig pool = ResourceRecommendation.ConnectionPoolConfig.builder()
@@ -90,17 +88,15 @@ public class InitialConfigurationService {
                 .maximumPoolSize(baseline.poolMaxSize)
                 .connectionTimeout(30000L)
                 .idleTimeout(600000L)
-                .maxLifetime(1800000L)
                 .build();
-        recommendation.setConnectionPoolConfig(pool);
+        recommendation.setConnectionPool(pool);
 
         // Thread pool
         ResourceRecommendation.ThreadPoolConfig threadPool = ResourceRecommendation.ThreadPoolConfig.builder()
-                .corePoolSize(baseline.threadPoolCore)
-                .maxPoolSize(baseline.threadPoolMax)
-                .queueCapacity(baseline.threadPoolQueue)
+                .minSpareThreads(baseline.threadPoolCore)
+                .maxThreads(baseline.threadPoolMax)
                 .build();
-        recommendation.setThreadPoolConfig(threadPool);
+        recommendation.setThreadPool(threadPool);
 
         // Cost analysis (estimated)
         ResourceRecommendation.CostAnalysis cost = ResourceRecommendation.CostAnalysis.builder()

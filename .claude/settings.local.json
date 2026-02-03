@@ -2,7 +2,30 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(gh repo create:*)",
+      "Bash(gh auth:*)",
+      "Bash(git push:*)",
+      "Bash(chmod:*)",
+      "Bash(mvn test)",
+      "Bash(java:*)",
+      "Bash(brew install:*)",
+      "Bash(export:*)",
+      "Bash(mvn clean test:*)",
+      "Bash(xargs:*)",
+      "Bash(mvn test:*)",
+      "Bash(mvn clean compile:*)",
+      "Bash(mvn clean:*)",
+      "Bash(mvn compile:*)",
+      "Bash(mvn -version:*)",
+      "Bash(echo:*)",
+      "Bash(mvn spring-boot:run:*)",
+      "Bash(npm start)",
+      "Bash(pkill:*)",
+      "Bash(curl:*)",
+      "Bash(JAVA_HOME=/usr/local/opt/openjdk@17 /usr/local/opt/openjdk@17/bin/java:*)",
+      "Bash(JAVA_HOME=/usr/local/opt/openjdk@17 PATH=/usr/local/opt/openjdk@17/bin:$PATH mvn clean compile:*)",
+      "Bash(lsof:*)"
     ]
   }
 }
