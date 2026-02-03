@@ -1,10 +1,7 @@
 package com.hackathon.analyzer.controller;
 
 import com.hackathon.analyzer.collector.MetricsCollectorService;
-import com.hackathon.analyzer.ml.CostPredictionService;
-import com.hackathon.analyzer.ml.WorkloadClassificationService;
 import com.hackathon.analyzer.model.*;
-import com.hackathon.analyzer.repository.AnomalyRepository;
 import com.hackathon.analyzer.service.ResourceAnalyzerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,11 +10,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,9 +27,6 @@ public class AnalyzerController {
 
     private final ResourceAnalyzerService analyzerService;
     private final MetricsCollectorService metricsCollector;
-    private final AnomalyRepository anomalyRepository;
-    private final CostPredictionService costPredictionService;
-    private final WorkloadClassificationService workloadClassificationService;
 
     @Operation(summary = "Health Check", description = "Check if the analyzer service is running")
     @ApiResponse(responseCode = "200", description = "Service is healthy")
