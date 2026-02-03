@@ -1,0 +1,240 @@
+# Azure DevOps Pipeline for SaveYourMoney
+# Triggers on main and develop branches
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - README.md
+      - docs/*
+      - '*.md'
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  MAVEN_CACHE_FOLDER: $(Pipeline.Workspace)/.m2/repository
+  MAVEN_OPTS: '-Dmaven.repo.local=$(MAVEN_CACHE_FOLDER)'
+  GCP_REGION: 'us-central1'
+
+stages:
+  # Stage 1: Build All Services
+  - stage: Build
+    displayName: 'Build All Services'
+    jobs:
+      - job: BuildAnalyzerService
+        displayName: 'Build Analyzer Service'
+        steps:
+          - task: Cache@2
+            inputs:
+              key: 'maven | "$(Agent.OS)" | analyzer-service/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+                maven
+              path: $(MAVEN_CACHE_FOLDER)
+            displayName: 'Cache Maven packages'
+
+          - task: Maven@3
+            displayName: 'Maven Build Analyzer Service'
+            inputs:
+              mavenPomFile: 'analyzer-service/pom.xml'
+              goals: 'clean package'
+              options: '-DskipTests $(MAVEN_OPTS)'
+              publishJUnitResults: false
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              mavenVersionOption: 'Default'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Analyzer Artifact'
+            inputs:
+              PathtoPublish: 'analyzer-service/target'
+              ArtifactName: 'analyzer-service'
+
+      - job: BuildCodeGeneratorService
+        displayName: 'Build Code Generator Service'
+        steps:
+          - task: Cache@2
+            inputs:
+              key: 'maven | "$(Agent.OS)" | code-generator-service/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+                maven
+              path: $(MAVEN_CACHE_FOLDER)
+            displayName: 'Cache Maven packages'
+
+          - task: Maven@3
+            displayName: 'Maven Build Code Generator Service'
+            inputs:
+              mavenPomFile: 'code-generator-service/pom.xml'
+              goals: 'clean package'
+              options: '-DskipTests $(MAVEN_OPTS)'
+              publishJUnitResults: false
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              mavenVersionOption: 'Default'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Code Generator Artifact'
+            inputs:
+              PathtoPublish: 'code-generator-service/target'
+              ArtifactName: 'code-generator-service'
+
+      - job: BuildDemoServices
+        displayName: 'Build Demo Services'
+        steps:
+          - task: Cache@2
+            inputs:
+              key: 'maven | "$(Agent.OS)" | demo-services/**/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+                maven
+              path: $(MAVEN_CACHE_FOLDER)
+            displayName: 'Cache Maven packages'
+
+          - script: |
+              echo "Building CPU Hungry Service..."
+              cd demo-services/cpu-hungry-service
+              mvn clean package -DskipTests $(MAVEN_OPTS)
+
+              echo "Building Memory Leaker Service..."
+              cd ../memory-leaker-service
+              mvn clean package -DskipTests $(MAVEN_OPTS)
+
+              echo "Building DB Connection Service..."
+              cd ../db-connection-service
+              mvn clean package -DskipTests $(MAVEN_OPTS)
+            displayName: 'Maven Build All Demo Services'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Demo Services Artifacts'
+            inputs:
+              PathtoPublish: 'demo-services'
+              ArtifactName: 'demo-services'
+
+  # Stage 2: Run Tests
+  - stage: Test
+    displayName: 'Run Tests'
+    dependsOn: Build
+    jobs:
+      - job: UnitTests
+        displayName: 'Run Unit Tests'
+        steps:
+          - task: Maven@3
+            displayName: 'Unit Tests - Analyzer Service'
+            inputs:
+              mavenPomFile: 'analyzer-service/pom.xml'
+              goals: 'test'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              codeCoverageToolOption: 'JaCoCo'
+
+          - task: Maven@3
+            displayName: 'Unit Tests - Code Generator Service'
+            inputs:
+              mavenPomFile: 'code-generator-service/pom.xml'
+              goals: 'test'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.17'
+              codeCoverageToolOption: 'JaCoCo'
+
+  # Stage 3: Build Docker Images
+  - stage: DockerBuild
+    displayName: 'Build Docker Images'
+    dependsOn: Test
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - job: BuildDockerImages
+        displayName: 'Build and Push Docker Images to GCR'
+        steps:
+          - task: Docker@2
+            displayName: 'Build Analyzer Service Image'
+            inputs:
+              command: 'build'
+              Dockerfile: 'analyzer-service/Dockerfile'
+              tags: |
+                gcr.io/$(GCP_PROJECT_ID)/analyzer-service:$(Build.BuildId)
+                gcr.io/$(GCP_PROJECT_ID)/analyzer-service:latest
+
+          - task: Docker@2
+            displayName: 'Build Code Generator Service Image'
+            inputs:
+              command: 'build'
+              Dockerfile: 'code-generator-service/Dockerfile'
+              tags: |
+                gcr.io/$(GCP_PROJECT_ID)/code-generator-service:$(Build.BuildId)
+                gcr.io/$(GCP_PROJECT_ID)/code-generator-service:latest
+
+          - task: Docker@2
+            displayName: 'Build CPU Hungry Service Image'
+            inputs:
+              command: 'build'
+              Dockerfile: 'demo-services/cpu-hungry-service/Dockerfile'
+              tags: |
+                gcr.io/$(GCP_PROJECT_ID)/cpu-hungry-service:$(Build.BuildId)
+                gcr.io/$(GCP_PROJECT_ID)/cpu-hungry-service:latest
+
+          - task: Docker@2
+            displayName: 'Build Memory Leaker Service Image'
+            inputs:
+              command: 'build'
+              Dockerfile: 'demo-services/memory-leaker-service/Dockerfile'
+              tags: |
+                gcr.io/$(GCP_PROJECT_ID)/memory-leaker-service:$(Build.BuildId)
+                gcr.io/$(GCP_PROJECT_ID)/memory-leaker-service:latest
+
+          - task: Docker@2
+            displayName: 'Build DB Connection Service Image'
+            inputs:
+              command: 'build'
+              Dockerfile: 'demo-services/db-connection-service/Dockerfile'
+              tags: |
+                gcr.io/$(GCP_PROJECT_ID)/db-connection-service:$(Build.BuildId)
+                gcr.io/$(GCP_PROJECT_ID)/db-connection-service:latest
+
+  # Stage 4: Deploy to GCP Cloud Run
+  - stage: Deploy
+    displayName: 'Deploy to GCP Cloud Run'
+    dependsOn: DockerBuild
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployToGCP
+        displayName: 'Deploy to GCP Cloud Run'
+        environment: 'production'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - script: |
+                    chmod +x scripts/azure-deploy-to-gcp.sh
+                    ./scripts/azure-deploy-to-gcp.sh
+                  displayName: 'Deploy All Services to Cloud Run'
+                  env:
+                    GCP_PROJECT_ID: $(GCP_PROJECT_ID)
+                    GCP_SERVICE_ACCOUNT_KEY: $(GCP_SERVICE_ACCOUNT_KEY)
+                    BUILD_ID: $(Build.BuildId)
+
+                - script: |
+                    echo "Deployment completed successfully!"
+                    echo "Services deployed:"
+                    echo "- Analyzer Service: https://analyzer-service-xxxxx.run.app"
+                    echo "- Code Generator: https://code-generator-service-xxxxx.run.app"
+                    echo "- CPU Hungry: https://cpu-hungry-service-xxxxx.run.app"
+                    echo "- Memory Leaker: https://memory-leaker-service-xxxxx.run.app"
+                    echo "- DB Connection: https://db-connection-service-xxxxx.run.app"
+                  displayName: 'Deployment Summary'
