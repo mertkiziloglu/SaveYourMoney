@@ -2,9 +2,11 @@ package com.hackathon.analyzer.collector;
 
 import com.hackathon.analyzer.model.MetricsSnapshot;
 import com.hackathon.analyzer.repository.MetricsSnapshotRepository;
+import com.hackathon.analyzer.service.AnomalyDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -24,6 +26,7 @@ public class MetricsCollectorService {
 
     private final MetricsSnapshotRepository metricsRepository;
     private final WebClient.Builder webClientBuilder;
+    private final AnomalyDetectionService anomalyDetectionService;
 
     @Value("${analyzer.services.cpu-hungry.url:http://localhost:8081}")
     private String cpuHungryUrl;
@@ -66,8 +69,34 @@ public class MetricsCollectorService {
                     String.format("%.2f", snapshot.getCpuUsagePercent()),
                     snapshot.getHeapUsedBytes() / (1024.0 * 1024.0));
 
+            // Trigger anomaly detection after collecting metrics
+            performAnomalyDetection(serviceName);
+
         } catch (Exception e) {
             log.warn("Failed to collect metrics from {}: {}", serviceName, e.getMessage());
+        }
+    }
+
+    /**
+     * Perform anomaly detection on recent metrics
+     */
+    private void performAnomalyDetection(String serviceName) {
+        try {
+            // Fetch last 60 snapshots (10 minutes of data at 10-second intervals)
+            List<MetricsSnapshot> recentSnapshots = metricsRepository
+                    .findByServiceNameOrderByTimestampDesc(serviceName, PageRequest.of(0, 60))
+                    .getContent();
+
+            if (!recentSnapshots.isEmpty()) {
+                // Reverse to get chronological order
+                List<MetricsSnapshot> chronologicalSnapshots = new java.util.ArrayList<>(recentSnapshots);
+                java.util.Collections.reverse(chronologicalSnapshots);
+
+                // Run anomaly detection
+                anomalyDetectionService.analyzeAll(serviceName, chronologicalSnapshots);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to perform anomaly detection for {}: {}", serviceName, e.getMessage());
         }
     }
 

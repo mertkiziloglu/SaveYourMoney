@@ -1,6 +1,8 @@
 package com.hackathon.analyzer.repository;
 
 import com.hackathon.analyzer.model.MetricsSnapshot;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -14,6 +16,8 @@ public interface MetricsSnapshotRepository extends JpaRepository<MetricsSnapshot
     List<MetricsSnapshot> findByServiceName(String serviceName);
 
     List<MetricsSnapshot> findByServiceNameAndTimestampAfter(String serviceName, Instant since);
+
+    Page<MetricsSnapshot> findByServiceNameOrderByTimestampDesc(String serviceName, Pageable pageable);
 
     @Query("SELECT m FROM MetricsSnapshot m WHERE m.serviceName = :serviceName ORDER BY m.timestamp DESC")
     List<MetricsSnapshot> findRecentMetrics(String serviceName);

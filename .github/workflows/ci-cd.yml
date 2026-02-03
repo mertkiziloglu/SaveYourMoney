@@ -39,14 +39,17 @@ jobs:
     - name: Build with Maven
       run: |
         cd ${{ matrix.service }}
-        mvn clean package -DskipTests -B
-      continue-on-error: false
+        mvn clean compile -B
 
-    - name: Run Tests (if available)
+    - name: Run Tests
       run: |
         cd ${{ matrix.service }}
-        mvn test -B || echo "No tests found or tests skipped"
-      continue-on-error: true
+        mvn test -B
+
+    - name: Package Application
+      run: |
+        cd ${{ matrix.service }}
+        mvn package -DskipTests -B
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4

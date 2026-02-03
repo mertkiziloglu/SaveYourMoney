@@ -17,6 +17,7 @@
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet"/>
+    <link href="styles/anomaly-alerts.css" rel="stylesheet"/>
     <script id="tailwind-config">
         tailwind.config = {
             theme: {
@@ -166,6 +167,32 @@
     </aside>
     <main class="flex-1 overflow-y-auto bg-slate-50 p-4 lg:p-8">
         <div class="max-w-7xl mx-auto flex flex-col gap-6" id="main-content">
+
+            <!-- Real-Time Anomaly Alerts Section -->
+            <div id="anomaly-alerts-container" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" style="display: none;">
+                <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-red-50 to-orange-50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-red-600 text-2xl animate-pulse">warning</span>
+                            <div>
+                                <h3 class="text-lg font-bold text-slate-900">Real-Time Anomaly Alerts</h3>
+                                <p class="text-sm text-slate-600" id="anomaly-subtitle">Monitoring active anomalies across services</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs text-slate-500" id="last-check-time">Checking...</span>
+                            <button onclick="refreshAnomalies()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">refresh</span>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="active-anomalies" class="p-6">
+                    <!-- Anomaly cards will be dynamically populated -->
+                </div>
+            </div>
+
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
