@@ -1,0 +1,170 @@
+{
+  "version": "1.0.0",
+  "currentFeature": "HEDEF.md Score Optimization (Target: 90-95/100)",
+  "queue": [
+    {
+      "id": "task-001",
+      "title": "PRIORITY 1: Quick Wins (30 min - +8 points)",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "task-001-1",
+          "agent": "backend-agent",
+          "task": "Add Spring Security + JWT authentication",
+          "description": "Implement JWT-based authentication for all API endpoints. Add SecurityConfig.java, JwtTokenProvider.java. Update pom.xml with spring-boot-starter-security.",
+          "status": "pending",
+          "priority": "HIGH",
+          "points": "+3",
+          "estimatedTime": "15 min",
+          "dependencies": [],
+          "files": [
+            "analyzer-service/pom.xml",
+            "analyzer-service/src/main/java/com/hackathon/analyzer/config/SecurityConfig.java",
+            "analyzer-service/src/main/java/com/hackathon/analyzer/security/JwtTokenProvider.java"
+          ]
+        },
+        {
+          "id": "task-001-2",
+          "agent": "backend-agent",
+          "task": "Add Swagger/OpenAPI documentation",
+          "description": "Integrate springdoc-openapi. Add @OpenAPI annotations to all controllers. Generate interactive API docs at /swagger-ui.html",
+          "status": "pending",
+          "priority": "HIGH",
+          "points": "+2",
+          "estimatedTime": "10 min",
+          "dependencies": [],
+          "files": [
+            "analyzer-service/pom.xml",
+            "code-generator-service/pom.xml",
+            "*/src/main/java/com/hackathon/*/controller/*.java"
+          ]
+        },
+        {
+          "id": "task-001-3",
+          "agent": "cloud-agent",
+          "task": "Create Ethical AI documentation",
+          "description": "Write ETHICAL-AI.md covering bias detection, transparency, cost optimization ethics, responsible AI practices.",
+          "status": "pending",
+          "priority": "HIGH",
+          "points": "+2",
+          "estimatedTime": "10 min",
+          "dependencies": [],
+          "files": [
+            "ETHICAL-AI.md",
+            "docs/ai-transparency-report.md"
+          ]
+        },
+        {
+          "id": "task-001-4",
+          "agent": "cloud-agent",
+          "task": "Setup GitHub Actions CI/CD pipeline",
+          "description": "Create .github/workflows/ci-cd.yml for automated testing and deployment. Include build, test, and GCP deployment stages.",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "points": "+1",
+          "estimatedTime": "15 min",
+          "dependencies": ["task-002-1"],
+          "files": [
+            ".github/workflows/ci-cd.yml",
+            ".github/workflows/test.yml",
+            ".github/workflows/deploy-gcp.yml"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-002",
+      "title": "PRIORITY 2: Medium Effort (1-2 hours - +5 points)",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "task-002-1",
+          "agent": "testing-agent",
+          "task": "Add Unit & Integration Tests (80%+ coverage)",
+          "description": "Write JUnit 5 tests for ResourceAnalyzerService, FileGeneratorService. Add Mockito for service mocking. Target 80%+ code coverage.",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "points": "+2",
+          "estimatedTime": "45 min",
+          "dependencies": [],
+          "files": [
+            "analyzer-service/src/test/java/com/hackathon/analyzer/service/ResourceAnalyzerServiceTest.java",
+            "code-generator-service/src/test/java/com/hackathon/codegen/generator/FileGeneratorServiceTest.java",
+            "*/pom.xml (add JUnit 5, Mockito dependencies)"
+          ]
+        },
+        {
+          "id": "task-002-2",
+          "agent": "testing-agent",
+          "task": "Implement Anomaly Detection ML Service",
+          "description": "Create AnomalyDetector.java using time-series analysis. Implement CostPredictor.java for forecasting. Use Apache Commons Math for statistical models.",
+          "status": "pending",
+          "priority": "MEDIUM",
+          "points": "+3",
+          "estimatedTime": "1 hour",
+          "dependencies": [],
+          "files": [
+            "analyzer-service/src/main/java/com/hackathon/analyzer/ml/AnomalyDetector.java",
+            "analyzer-service/src/main/java/com/hackathon/analyzer/ml/CostPredictor.java",
+            "analyzer-service/src/main/java/com/hackathon/analyzer/ml/TimeSeriesAnalyzer.java"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "task-003",
+      "title": "PRIORITY 3: Advanced Features (2-4 hours - +3 points)",
+      "status": "pending",
+      "subtasks": [
+        {
+          "id": "task-003-1",
+          "agent": "cloud-agent",
+          "task": "Complete AWS deployment guide",
+          "description": "Finish AWS-DEPLOYMENT-GUIDE.md with CloudFormation templates, ECS deployment, and cost comparison vs GCP.",
+          "status": "pending",
+          "priority": "LOW",
+          "points": "+1",
+          "estimatedTime": "30 min",
+          "dependencies": [],
+          "files": [
+            "AWS-DEPLOYMENT-GUIDE.md",
+            "aws-cloudformation/template.yaml"
+          ]
+        },
+        {
+          "id": "task-003-2",
+          "agent": "cloud-agent",
+          "task": "Create Azure deployment documentation",
+          "description": "Expand AZURE-DEVOPS-MIGRATION.md with ARM templates and Azure Container Instances deployment.",
+          "status": "pending",
+          "priority": "LOW",
+          "points": "+1",
+          "estimatedTime": "30 min",
+          "dependencies": [],
+          "files": [
+            "AZURE-DEPLOYMENT-GUIDE.md",
+            "azure-arm/deployment.json"
+          ]
+        },
+        {
+          "id": "task-003-3",
+          "agent": "frontend-agent",
+          "task": "Add Grafana dashboard templates",
+          "description": "Create grafana/dashboards/saveyourmoney-dashboard.json with metrics visualization panels.",
+          "status": "pending",
+          "priority": "LOW",
+          "points": "+1",
+          "estimatedTime": "45 min",
+          "dependencies": [],
+          "files": [
+            "grafana/dashboards/saveyourmoney-dashboard.json",
+            "prometheus/alerts.yml",
+            "docs/monitoring-setup.md"
+          ]
+        }
+      ]
+    }
+  ],
+  "completed": [],
+  "blocked": []
+}

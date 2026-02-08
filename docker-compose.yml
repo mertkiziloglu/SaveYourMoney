@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # === Core Analyzer Service ===
+  analyzer-service:
+    build: ./analyzer-service
+    container_name: saveyourmoney-analyzer
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - APP_API_KEY=${APP_API_KEY:-changeme}
+      - APP_SECURITY_JWT_SECRET=${JWT_SECRET:-saveyourmoney-jwt-secret-key-for-development-only-change-in-production}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - saveyourmoney-net
+
+  # === Code Generator Service ===
+  code-generator-service:
+    build: ./code-generator-service
+    container_name: saveyourmoney-codegen
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    depends_on:
+      analyzer-service:
+        condition: service_healthy
+    networks:
+      - saveyourmoney-net
+
+  # === Dashboard UI ===
+  dashboard-ui:
+    build: ./dashboard-ui
+    container_name: saveyourmoney-dashboard
+    ports:
+      - "3000:8080"
+    depends_on:
+      analyzer-service:
+        condition: service_healthy
+    networks:
+      - saveyourmoney-net
+
+  # === Demo: CPU-Hungry Service ===
+  cpu-hungry-service:
+    build: ./demo-services/cpu-hungry-service
+    container_name: saveyourmoney-cpu-demo
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    networks:
+      - saveyourmoney-net
+
+  # === Demo: Memory-Leaker Service ===
+  memory-leaker-service:
+    build: ./demo-services/memory-leaker-service
+    container_name: saveyourmoney-memory-demo
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    networks:
+      - saveyourmoney-net
+
+  # === Demo: DB-Connection Service ===
+  db-connection-service:
+    build: ./demo-services/db-connection-service
+    container_name: saveyourmoney-db-demo
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+    networks:
+      - saveyourmoney-net
+
+networks:
+  saveyourmoney-net:
+    driver: bridge

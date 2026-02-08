@@ -24,3 +24,7 @@ target/
 
 # Claude
 .claude/settings.local.json
+
+# Claude multi-agent session state
+.claude/SYNC.json
+.claude/sessions/

@@ -1,6 +1,6 @@
 # SaveYourMoney 💰
 
-AI-powered resource optimization platform that automatically analyzes microservices, detects performance issues, and generates optimized configurations to reduce cloud costs.
+Intelligent resource optimization platform that automatically analyzes microservices, detects performance issues, and generates optimized configurations to reduce cloud costs.
 
 ---
 

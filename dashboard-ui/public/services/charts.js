@@ -1,46 +1,41 @@
-// Charts Service - SaveYourMoney Dashboard
+/**
+ * SaveYourMoney Chart.js Integration
+ * Renders interactive charts for dashboard metrics visualization.
+ */
 
-const Charts = {
-    cpuChart: null,
-    memoryChart: null,
-    dbChart: null,
+const ChartManager = {
+    instances: {},
 
-    // Create CPU metrics chart
-    createCPUChart(analysisData) {
-        const ctx = document.getElementById('cpu-chart');
+    /**
+     * Initialize a cost savings comparison bar chart.
+     * @param {string} canvasId  - the <canvas> element ID
+     * @param {Object} data      - { labels: string[], current: number[], optimized: number[] }
+     */
+    renderCostChart(canvasId, data) {
+        this.destroy(canvasId);
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
         if (!ctx) return;
 
-        if (this.cpuChart) {
-            this.cpuChart.destroy();
-        }
-
-        const currentCpu = this.parseCpuToMillicores(analysisData.currentCpuRequest || '100m');
-        const recommendedCpu = this.parseCpuToMillicores(analysisData.recommendedCpuRequest || '500m');
-
-        this.cpuChart = new Chart(ctx, {
+        this.instances[canvasId] = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['CPU Request', 'CPU Limit'],
+                labels: data.labels,
                 datasets: [
                     {
-                        label: 'Current (Suboptimal)',
-                        data: [
-                            this.parseCpuToMillicores(analysisData.currentCpuRequest),
-                            this.parseCpuToMillicores(analysisData.currentCpuLimit)
-                        ],
+                        label: 'Current Monthly Cost ($)',
+                        data: data.current,
                         backgroundColor: 'rgba(239, 68, 68, 0.7)',
                         borderColor: 'rgba(239, 68, 68, 1)',
-                        borderWidth: 2
+                        borderWidth: 1,
+                        borderRadius: 6
                     },
                     {
-                        label: 'Recommended (Optimized)',
-                        data: [
-                            this.parseCpuToMillicores(analysisData.recommendedCpuRequest),
-                            this.parseCpuToMillicores(analysisData.recommendedCpuLimit)
-                        ],
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                        borderColor: 'rgba(16, 185, 129, 1)',
-                        borderWidth: 2
+                        label: 'Optimized Monthly Cost ($)',
+                        data: data.optimized,
+                        backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 1,
+                        borderRadius: 6
                     }
                 ]
             },
@@ -48,156 +43,127 @@ const Charts = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'CPU Resources Comparison',
-                        font: { size: 16, weight: 'bold' }
-                    },
                     legend: {
-                        display: true,
-                        position: 'top'
+                        position: 'top',
+                        labels: { font: { family: 'Inter, sans-serif', size: 12 }, usePointStyle: true }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}`
+                        }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Millicores (m)'
-                        }
-                    }
+                        ticks: { callback: v => `$${v}` },
+                        grid: { color: 'rgba(148,163,184,0.1)' }
+                    },
+                    x: { grid: { display: false } }
                 }
             }
         });
     },
 
-    // Create Memory metrics chart
-    createMemoryChart(analysisData) {
-        const ctx = document.getElementById('memory-chart');
+    /**
+     * Initialize a CPU/Memory usage doughnut gauge.
+     * @param {string} canvasId
+     * @param {number} usage    - percentage 0-100
+     * @param {string} label    - e.g. 'CPU' or 'Memory'
+     */
+    renderGaugeChart(canvasId, usage, label) {
+        this.destroy(canvasId);
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
         if (!ctx) return;
 
-        if (this.memoryChart) {
-            this.memoryChart.destroy();
-        }
+        const color = usage > 80 ? '#ef4444' : usage > 60 ? '#f59e0b' : '#22c55e';
 
-        this.memoryChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Memory Request', 'Memory Limit'],
-                datasets: [
-                    {
-                        label: 'Current (Suboptimal)',
-                        data: [
-                            this.parseMemoryToMi(analysisData.currentMemoryRequest),
-                            this.parseMemoryToMi(analysisData.currentMemoryLimit)
-                        ],
-                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                        borderColor: 'rgba(239, 68, 68, 1)',
-                        borderWidth: 2
-                    },
-                    {
-                        label: 'Recommended (Optimized)',
-                        data: [
-                            this.parseMemoryToMi(analysisData.recommendedMemoryRequest),
-                            this.parseMemoryToMi(analysisData.recommendedMemoryLimit)
-                        ],
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                        borderColor: 'rgba(16, 185, 129, 1)',
-                        borderWidth: 2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Memory Resources Comparison',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Megabytes (Mi)'
-                        }
-                    }
-                }
-            }
-        });
-    },
-
-    // Create DB Connection Pool chart
-    createDBChart(analysisData) {
-        const ctx = document.getElementById('db-chart');
-        if (!ctx) return;
-
-        if (this.dbChart) {
-            this.dbChart.destroy();
-        }
-
-        const currentPool = 5; // Hardcoded current suboptimal value
-        const recommendedPool = analysisData.recommendedMaxPoolSize || 50;
-
-        this.dbChart = new Chart(ctx, {
+        this.instances[canvasId] = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Current Pool Size', 'Recommended Pool Size'],
+                labels: [`${label} Used`, 'Available'],
                 datasets: [{
-                    data: [currentPool, recommendedPool - currentPool],
-                    backgroundColor: [
-                        'rgba(239, 68, 68, 0.7)',
-                        'rgba(16, 185, 129, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(239, 68, 68, 1)',
-                        'rgba(16, 185, 129, 1)'
-                    ],
-                    borderWidth: 2
+                    data: [usage, 100 - usage],
+                    backgroundColor: [color, 'rgba(148,163,184,0.1)'],
+                    borderWidth: 0,
+                    cutout: '75%'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'Connection Pool Size Comparison',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    legend: {
-                        display: true,
-                        position: 'bottom'
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed}%` }
                     }
+                }
+            },
+            plugins: [{
+                id: 'centerText',
+                afterDraw(chart) {
+                    const { ctx: c, chartArea: { width, height, top, left } } = chart;
+                    c.save();
+                    c.font = 'bold 24px Inter, sans-serif';
+                    c.fillStyle = getComputedStyle(document.documentElement)
+                        .getPropertyValue('--chart-text') || '#1e293b';
+                    c.textAlign = 'center';
+                    c.textBaseline = 'middle';
+                    c.fillText(`${Math.round(usage)}%`, left + width / 2, top + height / 2);
+                    c.restore();
+                }
+            }]
+        });
+    },
+
+    /**
+     * Render anomaly timeline as a line chart.
+     * @param {string} canvasId
+     * @param {Object} data - { timestamps: string[], counts: number[] }
+     */
+    renderTimelineChart(canvasId, data) {
+        this.destroy(canvasId);
+        const ctx = document.getElementById(canvasId)?.getContext('2d');
+        if (!ctx) return;
+
+        this.instances[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.timestamps,
+                datasets: [{
+                    label: 'Anomalies',
+                    data: data.counts,
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#f59e0b'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 },
+                        grid: { color: 'rgba(148,163,184,0.1)' }
+                    },
+                    x: { grid: { display: false } }
                 }
             }
         });
     },
 
-    // Helper: Parse CPU to millicores
-    parseCpuToMillicores(cpu) {
-        if (!cpu) return 0;
-        if (cpu.endsWith('m')) {
-            return parseInt(cpu.replace('m', ''));
+    /** Destroy a chart instance to prevent memory leaks. */
+    destroy(canvasId) {
+        if (this.instances[canvasId]) {
+            this.instances[canvasId].destroy();
+            delete this.instances[canvasId];
         }
-        return parseFloat(cpu) * 1000;
-    },
-
-    // Helper: Parse Memory to Mi
-    parseMemoryToMi(memory) {
-        if (!memory) return 0;
-        if (memory.endsWith('Mi')) {
-            return parseInt(memory.replace('Mi', ''));
-        } else if (memory.endsWith('Gi')) {
-            return parseInt(memory.replace('Gi', '')) * 1024;
-        }
-        return parseInt(memory) / (1024 * 1024);
     }
 };

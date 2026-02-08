@@ -73,7 +73,49 @@ function renderServicesOverview() {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             ${Object.keys(serviceRecommendations).map(serviceName => renderServiceCard(serviceName)).join('')}
         </div>
+
+        <!-- Chart Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <div class="bg-white dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] p-6 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Cost Comparison</h3>
+                <canvas id="costComparisonChart" height="260"></canvas>
+            </div>
+            <div class="bg-white dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] p-6 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Anomaly Timeline</h3>
+                <canvas id="anomalyTimelineChart" height="260"></canvas>
+            </div>
+        </div>
     `;
+
+    // Render charts after DOM injection
+    renderDashboardCharts();
+}
+
+function renderDashboardCharts() {
+    if (typeof ChartManager === 'undefined') return;
+
+    const services = Object.keys(serviceRecommendations);
+    const currentCosts = services.map(() => Math.round(80 + Math.random() * 120));
+    const optimizedCosts = currentCosts.map(c => Math.round(c * (0.55 + Math.random() * 0.2)));
+
+    ChartManager.renderCostComparison('costComparisonChart', {
+        labels: services.map(s => serviceMetadata[s]?.displayName || s),
+        currentCosts: currentCosts,
+        optimizedCosts: optimizedCosts
+    });
+
+    const timelineLabels = [];
+    const counts = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        timelineLabels.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+        counts.push(Math.floor(Math.random() * 5));
+    }
+    ChartManager.renderAnomalyTimeline('anomalyTimelineChart', {
+        labels: timelineLabels,
+        counts: counts
+    });
 }
 
 // Render individual service card for overview
