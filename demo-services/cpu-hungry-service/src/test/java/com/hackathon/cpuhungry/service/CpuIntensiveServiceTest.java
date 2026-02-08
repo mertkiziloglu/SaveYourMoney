@@ -43,8 +43,7 @@ class CpuIntensiveServiceTest {
     void multiplyMatrices_shouldReturnMatrix() {
         double[][] result = cpuIntensiveService.multiplyMatrices(10);
 
-        assertThat(result).hasSize(10);
-        assertThat(result[0]).hasSize(10);
+        assertThat(result).hasDimensions(10, 10);
     }
 
     @Test
