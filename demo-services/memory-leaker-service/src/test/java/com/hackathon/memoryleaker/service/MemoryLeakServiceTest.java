@@ -23,9 +23,9 @@ class MemoryLeakServiceTest {
         CachedData result = memoryLeakService.addToCache("test-key", 100);
 
         assertThat(result).isNotNull();
-        assertThat(result.getKey()).isEqualTo("test-key");
-        assertThat(result.getData()).isNotNull();
-        assertThat(result.getTimestamp()).isNotNull();
+        assertThat(result.getId()).isEqualTo("test-key");
+        assertThat(result.getLargeData()).isNotNull();
+        assertThat(result.getCreatedAt()).isNotNull();
     }
 
     @Test

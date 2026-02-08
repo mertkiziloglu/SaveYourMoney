@@ -28,11 +28,7 @@ class MemoryLeakerControllerTest {
 
     @BeforeEach
     void setUp() {
-        CachedData mockCachedData = CachedData.builder()
-                .key("test-key")
-                .data(new byte[1024])
-                .timestamp(Instant.now())
-                .build();
+        CachedData mockCachedData = new CachedData("test-key", new byte[1024], Instant.now(), "test-metadata");
 
         when(memoryLeakService.addToCache(anyString(), anyInt())).thenReturn(mockCachedData);
 
@@ -61,8 +57,8 @@ class MemoryLeakerControllerTest {
     @Test
     void addToCache_shouldAddDataToCache() throws Exception {
         mockMvc.perform(post("/api/cache/add")
-                        .param("key", "test-key")
-                        .param("sizeKB", "100"))
+                .param("key", "test-key")
+                .param("sizeKB", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.operation").value("cache-add"))
                 .andExpect(jsonPath("$.key").value("test-key"))
@@ -84,7 +80,7 @@ class MemoryLeakerControllerTest {
     @Test
     void processLargeData_shouldProcessData() throws Exception {
         mockMvc.perform(post("/api/process/large")
-                        .param("sizeMB", "10"))
+                .param("sizeMB", "10"))
                 .andExpect(status().isOk());
 
         verify(memoryLeakService, times(1)).processLargeData(10);
@@ -93,7 +89,7 @@ class MemoryLeakerControllerTest {
     @Test
     void memoryBomb_shouldExecuteMultipleOperations() throws Exception {
         mockMvc.perform(post("/api/memory-bomb")
-                        .param("iterations", "5"))
+                .param("iterations", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.operation").value("memory-bomb"))
                 .andExpect(jsonPath("$.iterations").value(5));
