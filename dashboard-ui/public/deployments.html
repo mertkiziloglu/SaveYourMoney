@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html class="light" lang="en">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Deployments Management - Save Your Money</title>
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com" rel="preconnect"/>
-    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans:wght@400;500;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans:wght@400;500;700&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -29,7 +33,7 @@
                         "display": ["Inter", "sans-serif"],
                         "mono": ["Fira Code", "monospace"],
                     },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
                 },
             },
         }
@@ -38,221 +42,263 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+
         .icon-filled {
             font-variation-settings: 'FILL' 1;
         }
     </style>
 </head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display transition-colors duration-200">
 
-<div class="flex h-screen w-full overflow-hidden">
-    <!-- Sidebar -->
-    <aside class="hidden md:flex flex-col w-64 h-full bg-surface-light dark:bg-[#111a22] border-r border-slate-200 dark:border-[#233648] shrink-0 z-20">
-        <div class="p-6 flex items-center gap-3">
-            <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                <span class="material-symbols-outlined text-xl">savings</span>
-            </div>
-            <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">Save Your Money</span>
-        </div>
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display transition-colors duration-200">
 
-        <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
-            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="index.html">
-                <span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
-                <span class="text-sm font-medium">Dashboard</span>
-            </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:bg-[#233648] dark:text-white" href="deployments.html">
-                <span class="material-symbols-outlined icon-filled">layers</span>
-                <span class="text-sm font-medium">Deployments</span>
-            </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors" href="cost-analysis.html">
-                <span class="material-symbols-outlined group-hover:text-primary">attach_money</span>
-                <span class="text-sm font-medium">Cost Analysis</span>
-            </a>
-        </nav>
-
-        <div class="p-4 border-t border-slate-200 dark:border-[#233648]">
-            <div class="flex items-center gap-3">
-                <div class="size-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold">
-                    DT
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside
+            class="hidden md:flex flex-col w-64 h-full bg-surface-light dark:bg-[#111a22] border-r border-slate-200 dark:border-[#233648] shrink-0 z-20">
+            <div class="p-6 flex items-center gap-3">
+                <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined text-xl">savings</span>
                 </div>
-                <div class="flex flex-col">
-                    <span class="text-sm font-bold text-slate-900 dark:text-white">DevOps Team</span>
-                    <span class="text-xs text-slate-500 dark:text-slate-400">team@company.com</span>
-                </div>
+                <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">Save Your Money</span>
             </div>
-        </div>
-    </aside>
 
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col h-full relative overflow-hidden">
-        <!-- Header -->
-        <header class="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-[#111a22] border-b border-slate-200 dark:border-[#233648] shrink-0">
-            <div class="flex items-center gap-4">
-                <button class="md:hidden text-slate-500 hover:text-primary">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white">All Deployments</h2>
-            </div>
-            <div class="flex items-center gap-4">
-                <button onclick="refreshDeployments()" class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors">
-                    <span class="material-symbols-outlined">refresh</span>
-                </button>
-                <button class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors relative">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111a22]"></span>
-                </button>
-            </div>
-        </header>
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors"
+                    href="index.html">
+                    <span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:bg-[#233648] dark:text-white"
+                    href="deployments.html">
+                    <span class="material-symbols-outlined icon-filled">layers</span>
+                    <span class="text-sm font-medium">Deployments</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors"
+                    href="recommendations.html">
+                    <span class="material-symbols-outlined group-hover:text-primary">auto_awesome</span>
+                    <span class="text-sm font-medium">Recommendations</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors"
+                    href="cost-analysis.html">
+                    <span class="material-symbols-outlined group-hover:text-primary">attach_money</span>
+                    <span class="text-sm font-medium">Cost Analysis</span>
+                </a>
+            </nav>
 
-        <!-- Main -->
-        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 lg:px-10 pb-20">
-            <div class="max-w-[1280px] mx-auto flex flex-col gap-6">
-
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="summary-cards">
-                    <!-- Cards will be dynamically loaded -->
-                </div>
-
-                <!-- Filters -->
-                <div class="bg-surface-light dark:bg-[#1d2832] p-4 rounded-xl border border-slate-200 dark:border-[#324d67] shadow-sm flex flex-col lg:flex-row items-center gap-4">
-                    <div class="relative flex-1 w-full">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined">search</span>
-                        <input id="search-input" class="w-full h-11 pl-10 pr-4 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary" placeholder="Search by name..." type="text"/>
+            <div class="p-4 border-t border-slate-200 dark:border-[#233648]">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="size-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                        DT
                     </div>
-                    <div class="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0">
-                        <select id="cluster-filter" class="h-11 pl-3 pr-10 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            <option value="">All Clusters</option>
-                        </select>
-                        <select id="namespace-filter" class="h-11 pl-3 pr-10 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            <option value="">All Namespaces</option>
-                        </select>
-                        <select id="status-filter" class="h-11 pl-3 pr-10 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/50 focus:border-primary">
-                            <option value="">All Statuses</option>
-                            <option value="Healthy">Healthy</option>
-                            <option value="Warning">Warning</option>
-                            <option value="Critical">Critical</option>
-                        </select>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-900 dark:text-white">DevOps Team</span>
+                        <span class="text-xs text-slate-500 dark:text-slate-400">team@company.com</span>
                     </div>
                 </div>
+            </div>
+        </aside>
 
-                <!-- Deployments Table -->
-                <div class="bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] overflow-hidden shadow-sm">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 dark:bg-[#111a22] border-b border-slate-200 dark:border-[#324d67]">
-                                <tr>
-                                    <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Name</th>
-                                    <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Namespace</th>
-                                    <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status Badge</th>
-                                    <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Current CPU / RAM</th>
-                                    <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Optimization Status</th>
-                                    <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="deployments-tbody" class="divide-y divide-slate-200 dark:divide-[#324d67]">
-                                <!-- Rows will be dynamically loaded -->
-                            </tbody>
-                        </table>
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col h-full relative overflow-hidden">
+            <!-- Header -->
+            <header
+                class="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-[#111a22] border-b border-slate-200 dark:border-[#233648] shrink-0">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden text-slate-500 hover:text-primary">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">All Deployments</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="refreshDeployments()"
+                        class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors">
+                        <span class="material-symbols-outlined">refresh</span>
+                    </button>
+                    <button
+                        onclick="document.documentElement.classList.toggle('dark');localStorage.setItem('theme',document.documentElement.classList.contains('dark')?'dark':'light')"
+                        class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors"
+                        title="Toggle Dark Mode">
+                        <span class="material-symbols-outlined">dark_mode</span>
+                    </button>
+                    <button
+                        class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111a22]"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main -->
+            <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 lg:px-10 pb-20">
+                <div class="max-w-[1280px] mx-auto flex flex-col gap-6">
+
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="summary-cards">
+                        <!-- Cards will be dynamically loaded -->
                     </div>
 
-                    <!-- Pagination -->
-                    <div class="bg-slate-50 dark:bg-[#111a22] px-6 py-4 border-t border-slate-200 dark:border-[#324d67] flex items-center justify-between">
-                        <div class="text-sm text-slate-500 dark:text-slate-400" id="pagination-info">
-                            Loading...
+                    <!-- Filters -->
+                    <div
+                        class="bg-surface-light dark:bg-[#1d2832] p-4 rounded-xl border border-slate-200 dark:border-[#324d67] shadow-sm flex flex-col lg:flex-row items-center gap-4">
+                        <div class="relative flex-1 w-full">
+                            <span
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined">search</span>
+                            <input id="search-input"
+                                class="w-full h-11 pl-10 pr-4 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                                placeholder="Search by name..." type="text" />
                         </div>
-                        <div class="flex gap-2">
-                            <button id="prev-btn" class="px-3 py-1 rounded border border-slate-300 dark:border-[#324d67] bg-white dark:bg-[#1d2832] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#233648] text-sm disabled:opacity-50" disabled>Previous</button>
-                            <button id="next-btn" class="px-3 py-1 rounded border border-slate-300 dark:border-[#324d67] bg-white dark:bg-[#1d2832] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#233648] text-sm">Next</button>
+                        <div class="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0">
+                            <select id="cluster-filter"
+                                class="h-11 pl-3 pr-10 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                <option value="">All Clusters</option>
+                            </select>
+                            <select id="namespace-filter"
+                                class="h-11 pl-3 pr-10 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                <option value="">All Namespaces</option>
+                            </select>
+                            <select id="status-filter"
+                                class="h-11 pl-3 pr-10 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                <option value="">All Statuses</option>
+                                <option value="Healthy">Healthy</option>
+                                <option value="Warning">Warning</option>
+                                <option value="Critical">Critical</option>
+                            </select>
                         </div>
                     </div>
-                </div>
 
-            </div>
-        </main>
+                    <!-- Deployments Table -->
+                    <div
+                        class="bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] overflow-hidden shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead
+                                    class="bg-slate-50 dark:bg-[#111a22] border-b border-slate-200 dark:border-[#324d67]">
+                                    <tr>
+                                        <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Name</th>
+                                        <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Namespace
+                                        </th>
+                                        <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Status
+                                            Badge</th>
+                                        <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">Current
+                                            CPU / RAM</th>
+                                        <th class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                                            Optimization Status</th>
+                                        <th
+                                            class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300 text-right">
+                                            Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="deployments-tbody" class="divide-y divide-slate-200 dark:divide-[#324d67]">
+                                    <!-- Rows will be dynamically loaded -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div
+                            class="bg-slate-50 dark:bg-[#111a22] px-6 py-4 border-t border-slate-200 dark:border-[#324d67] flex items-center justify-between">
+                            <div class="text-sm text-slate-500 dark:text-slate-400" id="pagination-info">
+                                Loading...
+                            </div>
+                            <div class="flex gap-2">
+                                <button id="prev-btn"
+                                    class="px-3 py-1 rounded border border-slate-300 dark:border-[#324d67] bg-white dark:bg-[#1d2832] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#233648] text-sm disabled:opacity-50"
+                                    disabled>Previous</button>
+                                <button id="next-btn"
+                                    class="px-3 py-1 rounded border border-slate-300 dark:border-[#324d67] bg-white dark:bg-[#1d2832] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#233648] text-sm">Next</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
     </div>
-</div>
 
-<!-- Toast Container -->
-<div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
 
-<!-- API Scripts -->
-<script src="services/api.js"></script>
-<script>
-    // Mock data fallback
-    const MOCK_DATA = {
-        servicesAnalyzed: 3,
-        totalMonthlySavings: 109.27,
-        totalAnnualSavings: 1311.24,
-        cpuHungryService: {
-            serviceName: 'cpu-hungry-service',
-            currentCpuRequest: '100m',
-            currentCpuLimit: '200m',
-            currentMemoryRequest: '256Mi',
-            currentMemoryLimit: '512Mi',
-            recommendedCpuRequest: '350m',
-            recommendedCpuLimit: '700m',
-            recommendedMemoryRequest: '256Mi',
-            recommendedMemoryLimit: '384Mi',
-            estimatedMonthlySavings: 35.50,
-            p95CpuUsage: 87.5,
-            p95MemoryUsage: 45.2,
-            cpuThrottlingDetected: true,
-            memoryLeakDetected: false
-        },
-        memoryLeakerService: {
-            serviceName: 'memory-leaker-service',
-            currentCpuRequest: '200m',
-            currentCpuLimit: '400m',
-            currentMemoryRequest: '256Mi',
-            currentMemoryLimit: '512Mi',
-            recommendedCpuRequest: '150m',
-            recommendedCpuLimit: '300m',
-            recommendedMemoryRequest: '384Mi',
-            recommendedMemoryLimit: '576Mi',
-            estimatedMonthlySavings: 42.15,
-            p95CpuUsage: 35.8,
-            p95MemoryUsage: 78.9,
-            cpuThrottlingDetected: false,
-            memoryLeakDetected: true
-        },
-        dbConnectionService: {
-            serviceName: 'db-connection-service',
-            currentCpuRequest: '150m',
-            currentCpuLimit: '300m',
-            currentMemoryRequest: '512Mi',
-            currentMemoryLimit: '1Gi',
-            recommendedCpuRequest: '200m',
-            recommendedCpuLimit: '400m',
-            recommendedMemoryRequest: '384Mi',
-            recommendedMemoryLimit: '576Mi',
-            estimatedMonthlySavings: 31.62,
-            p95CpuUsage: 52.3,
-            p95MemoryUsage: 62.1,
-            cpuThrottlingDetected: false,
-            memoryLeakDetected: false,
-            connectionPoolExhaustion: true
-        }
-    };
-
-    // Load deployments data from Analyzer Service
-    async function loadDeployments() {
-        let data = null;
-        try {
-            showLoading();
-            data = await API.getDashboard();
-            console.log('Deployments data loaded from Analyzer Service:', data);
-            
-            // If API returns empty data, use mock data
-            if (!data || !data.servicesAnalyzed || data.servicesAnalyzed === 0) {
-                console.warn('API returned empty data, using mock data');
-                data = MOCK_DATA;
-                showToast('Using demo data', 'info');
+    <!-- API Scripts -->
+    <script src="services/api.js"></script>
+    <script>
+        // Mock data fallback
+        const MOCK_DATA = {
+            servicesAnalyzed: 3,
+            totalMonthlySavings: 109.27,
+            totalAnnualSavings: 1311.24,
+            cpuHungryService: {
+                serviceName: 'cpu-hungry-service',
+                currentCpuRequest: '100m',
+                currentCpuLimit: '200m',
+                currentMemoryRequest: '256Mi',
+                currentMemoryLimit: '512Mi',
+                recommendedCpuRequest: '350m',
+                recommendedCpuLimit: '700m',
+                recommendedMemoryRequest: '256Mi',
+                recommendedMemoryLimit: '384Mi',
+                estimatedMonthlySavings: 35.50,
+                p95CpuUsage: 87.5,
+                p95MemoryUsage: 45.2,
+                cpuThrottlingDetected: true,
+                memoryLeakDetected: false
+            },
+            memoryLeakerService: {
+                serviceName: 'memory-leaker-service',
+                currentCpuRequest: '200m',
+                currentCpuLimit: '400m',
+                currentMemoryRequest: '256Mi',
+                currentMemoryLimit: '512Mi',
+                recommendedCpuRequest: '150m',
+                recommendedCpuLimit: '300m',
+                recommendedMemoryRequest: '384Mi',
+                recommendedMemoryLimit: '576Mi',
+                estimatedMonthlySavings: 42.15,
+                p95CpuUsage: 35.8,
+                p95MemoryUsage: 78.9,
+                cpuThrottlingDetected: false,
+                memoryLeakDetected: true
+            },
+            dbConnectionService: {
+                serviceName: 'db-connection-service',
+                currentCpuRequest: '150m',
+                currentCpuLimit: '300m',
+                currentMemoryRequest: '512Mi',
+                currentMemoryLimit: '1Gi',
+                recommendedCpuRequest: '200m',
+                recommendedCpuLimit: '400m',
+                recommendedMemoryRequest: '384Mi',
+                recommendedMemoryLimit: '576Mi',
+                estimatedMonthlySavings: 31.62,
+                p95CpuUsage: 52.3,
+                p95MemoryUsage: 62.1,
+                cpuThrottlingDetected: false,
+                memoryLeakDetected: false,
+                connectionPoolExhaustion: true
             }
-        } catch (error) {
-            console.warn('Failed to load from API, using mock data:', error.message);
-            data = MOCK_DATA;
-            showToast('Using demo data - Analyzer Service not available', 'warning');
-        }
+        };
+
+        // Load deployments data from Analyzer Service
+        async function loadDeployments() {
+            let data = null;
+            try {
+                showLoading();
+                data = await API.getDashboard();
+                console.log('Deployments data loaded from Analyzer Service:', data);
+
+                // If API returns empty data, use mock data
+                if (!data || !data.servicesAnalyzed || data.servicesAnalyzed === 0) {
+                    console.warn('API returned empty data, using mock data');
+                    data = MOCK_DATA;
+                    showToast('Using demo data', 'info');
+                }
+            } catch (error) {
+                console.warn('Failed to load from API, using mock data:', error.message);
+                data = MOCK_DATA;
+                showToast('Using demo data - Analyzer Service not available', 'warning');
+            }
 
             // Update summary cards
             const summaryCards = document.getElementById('summary-cards');
@@ -305,21 +351,21 @@
                         // Determine status
                         const hasIssues = service.cpuThrottlingDetected || service.memoryLeakDetected || service.connectionPoolExhaustion;
                         const isCritical = (service.cpuThrottlingDetected && service.p95CpuUsage > 90) ||
-                                         (service.memoryLeakDetected && service.p95MemoryUsage > 85);
+                            (service.memoryLeakDetected && service.p95MemoryUsage > 85);
 
                         const statusClass = isCritical
                             ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800'
                             : hasIssues
-                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
+                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
 
                         const statusText = isCritical ? 'Critical' : hasIssues ? 'Warning' : 'Healthy';
 
                         // CPU usage color
                         const cpuPercent = service.p95CpuUsage || 0;
                         const cpuColor = cpuPercent > 95 ? 'text-red-600 dark:text-red-400 font-bold' :
-                                        cpuPercent > 80 ? 'text-amber-600 dark:text-amber-400 font-bold' :
-                                        'text-slate-900 dark:text-white';
+                            cpuPercent > 80 ? 'text-amber-600 dark:text-amber-400 font-bold' :
+                                'text-slate-900 dark:text-white';
 
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-50 dark:hover:bg-[#233648]/50 transition-colors">
@@ -380,11 +426,11 @@
             } else {
                 showNoData();
             }
-    }
+        }
 
-    function showLoading() {
-        const tbody = document.getElementById('deployments-tbody');
-        tbody.innerHTML = `
+        function showLoading() {
+            const tbody = document.getElementById('deployments-tbody');
+            tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center gap-4">
@@ -395,15 +441,15 @@
                 </td>
             </tr>
         `;
-    }
+        }
 
-    function hideLoading() {
-        // Loading hidden when table is populated
-    }
+        function hideLoading() {
+            // Loading hidden when table is populated
+        }
 
-    function showNoData() {
-        const tbody = document.getElementById('deployments-tbody');
-        tbody.innerHTML = `
+        function showNoData() {
+            const tbody = document.getElementById('deployments-tbody');
+            tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center gap-3">
@@ -414,11 +460,11 @@
                 </td>
             </tr>
         `;
-    }
+        }
 
-    function showError(message) {
-        const tbody = document.getElementById('deployments-tbody');
-        tbody.innerHTML = `
+        function showError(message) {
+            const tbody = document.getElementById('deployments-tbody');
+            tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="px-6 py-12 text-center">
                     <div class="flex flex-col items-center gap-4">
@@ -437,57 +483,63 @@
                 </td>
             </tr>
         `;
-        showToast('Failed to connect to Analyzer Service', 'error');
-    }
+            showToast('Failed to connect to Analyzer Service', 'error');
+        }
 
-    async function refreshDeployments() {
-        showToast('Refreshing deployments...', 'info');
-        await loadDeployments();
-    }
+        async function refreshDeployments() {
+            showToast('Refreshing deployments...', 'info');
+            await loadDeployments();
+        }
 
-    function viewDetail(serviceName) {
-        showToast(`Opening details for ${serviceName}...`, 'info');
-        // Navigate to dashboard with service details
-        window.location.href = `index.html?service=${serviceName}`;
-    }
+        function viewDetail(serviceName) {
+            showToast(`Opening details for ${serviceName}...`, 'info');
+            // Navigate to dashboard with service details
+            window.location.href = `recommendation-detail.html?service=${serviceName}`;
+        }
 
-    // Toast notification
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
 
-        const colors = {
-            success: 'bg-green-500',
-            error: 'bg-red-500',
-            info: 'bg-blue-500',
-            warning: 'bg-amber-500'
-        };
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500',
+                warning: 'bg-amber-500'
+            };
 
-        const icons = {
-            success: 'check_circle',
-            error: 'error',
-            info: 'info',
-            warning: 'warning'
-        };
+            const icons = {
+                success: 'check_circle',
+                error: 'error',
+                info: 'info',
+                warning: 'warning'
+            };
 
-        const toast = document.createElement('div');
-        toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0`;
-        toast.innerHTML = `
+            const toast = document.createElement('div');
+            toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0`;
+            toast.innerHTML = `
             <span class="material-symbols-outlined text-xl">${icons[type] || icons.info}</span>
             <span class="font-medium">${message}</span>
         `;
 
-        container.appendChild(toast);
-        setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
-        setTimeout(() => {
-            toast.classList.add('translate-x-full', 'opacity-0');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
-    // Auto-load on page load
-    document.addEventListener('DOMContentLoaded', loadDeployments);
-</script>
+        // Auto-load on page load
+        document.addEventListener('DOMContentLoaded', loadDeployments);
+
+        // Restore dark mode preference
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 
 </body>
+
 </html>
