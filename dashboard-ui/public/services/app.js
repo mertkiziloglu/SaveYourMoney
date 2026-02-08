@@ -211,6 +211,43 @@ function renderYAMLDiff(analysis) {
         memoryLimit: analysis.recommendedMemoryLimit || '1.5Gi'
     };
 
+    const currentPoolSize = analysis.currentMaxPoolSize || 5;
+    const currentMinIdle = analysis.currentMinIdle || 2;
+    const recommendedPoolSize = analysis.recommendedMaxPoolSize || currentPoolSize;
+    const recommendedMinIdle = analysis.recommendedMinIdle || currentMinIdle;
+    const showPoolSection = analysis.connectionPoolExhaustion || analysis.currentMaxPoolSize || analysis.recommendedMaxPoolSize;
+    const poolSizeChanged = recommendedPoolSize !== currentPoolSize;
+    const minIdleChanged = recommendedMinIdle !== currentMinIdle;
+
+    // Helper function for conditional diff styling
+    const redLine = 'bg-red-500/10 dark:bg-red-900/20 w-full block border-l-2 border-red-500 pl-1 text-red-700 dark:text-red-400 line-through decoration-red-500/50';
+    const greenLine = 'bg-green-500/10 dark:bg-green-900/20 w-full block border-l-2 border-green-500 pl-1 text-green-700 dark:text-green-400';
+    const neutralLine = 'opacity-50';
+
+    // Compare each field individually
+    const cpuReqChanged = current.cpuRequest !== recommended.cpuRequest;
+    const memReqChanged = current.memoryRequest !== recommended.memoryRequest;
+    const cpuLimChanged = current.cpuLimit !== recommended.cpuLimit;
+    const memLimChanged = current.memoryLimit !== recommended.memoryLimit;
+
+    const poolDiffLeft = showPoolSection ? `
+                    <div class="opacity-50 mt-2">&nbsp;</div>
+                    <div class="opacity-50"># --- application.yml ---</div>
+                    <div class="opacity-50">spring:</div>
+                    <div class="opacity-50">  datasource:</div>
+                    <div class="opacity-50">    hikari:</div>
+                    <div class="${poolSizeChanged ? redLine : neutralLine}">      maximum-pool-size: ${currentPoolSize}</div>
+                    <div class="${minIdleChanged ? redLine : neutralLine}">      minimum-idle: ${currentMinIdle}</div>` : '';
+
+    const poolDiffRight = showPoolSection ? `
+                    <div class="opacity-50 mt-2">&nbsp;</div>
+                    <div class="opacity-50"># --- application.yml ---</div>
+                    <div class="opacity-50">spring:</div>
+                    <div class="opacity-50">  datasource:</div>
+                    <div class="opacity-50">    hikari:</div>
+                    <div class="${poolSizeChanged ? greenLine : neutralLine}">      maximum-pool-size: ${recommendedPoolSize}</div>
+                    <div class="${minIdleChanged ? greenLine : neutralLine}">      minimum-idle: ${recommendedMinIdle}</div>` : '';
+
     return `
         <div class="bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] overflow-hidden shadow-sm">
             <div class="px-4 py-3 border-b border-slate-200 dark:border-[#324d67] bg-slate-50 dark:bg-[#111a22] flex items-center justify-between">
@@ -245,11 +282,11 @@ function renderYAMLDiff(analysis) {
                     <div class="opacity-50">      - name: main</div>
                     <div>        resources:</div>
                     <div>          requests:</div>
-                    <div class="bg-red-500/10 dark:bg-red-900/20 w-full block border-l-2 border-red-500 pl-1 text-red-700 dark:text-red-400 line-through decoration-red-500/50">            cpu: ${current.cpuRequest}</div>
-                    <div class="bg-red-500/10 dark:bg-red-900/20 w-full block border-l-2 border-red-500 pl-1 text-red-700 dark:text-red-400 line-through decoration-red-500/50">            memory: ${current.memoryRequest}</div>
+                    <div class="${cpuReqChanged ? redLine : neutralLine}">            cpu: ${current.cpuRequest}</div>
+                    <div class="${memReqChanged ? redLine : neutralLine}">            memory: ${current.memoryRequest}</div>
                     <div>          limits:</div>
-                    <div class="bg-red-500/10 dark:bg-red-900/20 w-full block border-l-2 border-red-500 pl-1 text-red-700 dark:text-red-400 line-through decoration-red-500/50">            cpu: ${current.cpuLimit}</div>
-                    <div class="bg-red-500/10 dark:bg-red-900/20 w-full block border-l-2 border-red-500 pl-1 text-red-700 dark:text-red-400 line-through decoration-red-500/50">            memory: ${current.memoryLimit}</div>
+                    <div class="${cpuLimChanged ? redLine : neutralLine}">            cpu: ${current.cpuLimit}</div>
+                    <div class="${memLimChanged ? redLine : neutralLine}">            memory: ${current.memoryLimit}</div>${poolDiffLeft}
                 </div>
 
                 <!-- New Pane -->
@@ -265,11 +302,11 @@ function renderYAMLDiff(analysis) {
                     <div class="opacity-50">      - name: main</div>
                     <div>        resources:</div>
                     <div>          requests:</div>
-                    <div class="bg-green-500/10 dark:bg-green-900/20 w-full block border-l-2 border-green-500 pl-1 text-green-700 dark:text-green-400">            cpu: ${recommended.cpuRequest}</div>
-                    <div class="bg-green-500/10 dark:bg-green-900/20 w-full block border-l-2 border-green-500 pl-1 text-green-700 dark:text-green-400">            memory: ${recommended.memoryRequest}</div>
+                    <div class="${cpuReqChanged ? greenLine : neutralLine}">            cpu: ${recommended.cpuRequest}</div>
+                    <div class="${memReqChanged ? greenLine : neutralLine}">            memory: ${recommended.memoryRequest}</div>
                     <div>          limits:</div>
-                    <div class="bg-green-500/10 dark:bg-green-900/20 w-full block border-l-2 border-green-500 pl-1 text-green-700 dark:text-green-400">            cpu: ${recommended.cpuLimit}</div>
-                    <div class="bg-green-500/10 dark:bg-green-900/20 w-full block border-l-2 border-green-500 pl-1 text-green-700 dark:text-green-400">            memory: ${recommended.memoryLimit}</div>
+                    <div class="${cpuLimChanged ? greenLine : neutralLine}">            cpu: ${recommended.cpuLimit}</div>
+                    <div class="${memLimChanged ? greenLine : neutralLine}">            memory: ${recommended.memoryLimit}</div>${poolDiffRight}
                 </div>
             </div>
         </div>
@@ -377,6 +414,19 @@ function renderAIInsights(analysis) {
         });
     }
 
+    // Connection pool exhaustion
+    if (analysis.connectionPoolExhaustion) {
+        const poolMsg = analysis.recommendedMaxPoolSize
+            ? `Current max pool size (${analysis.currentMaxPoolSize || 5}) is insufficient. Recommended: ${analysis.recommendedMaxPoolSize} connections.`
+            : 'Connection pool frequently reaches maximum capacity. Increase maximum-pool-size in application.yml.';
+        insights.push({
+            color: 'red',
+            icon: 'cable',
+            title: 'Connection Pool Exhaustion',
+            description: poolMsg
+        });
+    }
+
     // HPA recommendation
     if (analysis.cpuThrottlingDetected) {
         insights.push({
@@ -416,6 +466,7 @@ function getInsightColorClasses(color) {
     const classes = {
         'indigo': 'bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800',
         'amber': 'bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800',
+        'red': 'bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800',
         'slate': 'bg-surface-light dark:bg-[#1d2832] border border-slate-200 dark:border-[#324d67] shadow-sm'
     };
     return classes[color] || classes['slate'];
@@ -425,6 +476,7 @@ function getInsightIconColor(color) {
     const colors = {
         'indigo': 'text-indigo-600 dark:text-indigo-400',
         'amber': 'text-amber-600 dark:text-amber-400',
+        'red': 'text-red-600 dark:text-red-400',
         'slate': 'text-slate-400'
     };
     return colors[color] || colors['slate'];
@@ -434,6 +486,7 @@ function getInsightTitleColor(color) {
     const colors = {
         'indigo': 'text-indigo-900 dark:text-indigo-300',
         'amber': 'text-amber-900 dark:text-amber-300',
+        'red': 'text-red-900 dark:text-red-300',
         'slate': 'text-slate-900 dark:text-white'
     };
     return colors[color] || colors['slate'];
@@ -443,6 +496,7 @@ function getInsightDescColor(color) {
     const colors = {
         'indigo': 'text-indigo-700 dark:text-indigo-200',
         'amber': 'text-amber-700 dark:text-amber-200',
+        'red': 'text-red-700 dark:text-red-200',
         'slate': 'text-slate-500 dark:text-slate-400'
     };
     return colors[color] || colors['slate'];

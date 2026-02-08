@@ -97,6 +97,28 @@ public class ResourceAnalyzerService {
             strategy.applyRecommendations(builder, snapshots, stats);
         }
 
+        // Service-specific post-processing:
+        // Each service has a primary dimension — keep strategy recommendations for it,
+        // but set non-primary dimensions to current values so the YAML diff only
+        // highlights the relevant problem area.
+        String primaryDimension = getPrimaryDimension(serviceName);
+
+        if (!"CPU".equals(primaryDimension)) {
+            // Not a CPU-focused service → keep current CPU values
+            builder.recommendedCpuRequest(getCurrentConfig(serviceName, "cpuRequest"));
+            builder.recommendedCpuLimit(getCurrentConfig(serviceName, "cpuLimit"));
+        }
+        if (!"MEMORY".equals(primaryDimension)) {
+            // Not a memory-focused service → keep current memory values
+            builder.recommendedMemoryRequest(getCurrentConfig(serviceName, "memoryRequest"));
+            builder.recommendedMemoryLimit(getCurrentConfig(serviceName, "memoryLimit"));
+        }
+        if (!"CONNECTION_POOL".equals(primaryDimension)) {
+            // Not a connection-pool-focused service → no pool recommendations
+            builder.recommendedMaxPoolSize(null);
+            builder.recommendedMinIdle(null);
+        }
+
         builder.estimatedMonthlySavings(costService.estimateSavings(cpuStats, memoryStats))
                 .confidenceScore(calculateConfidence(snapshots.size(), cpuStats, memoryStats));
 
@@ -187,10 +209,24 @@ public class ResourceAnalyzerService {
         return sb.toString();
     }
 
+    /**
+     * Determine the primary analysis dimension for a service.
+     * Only the primary dimension gets strategy-calculated recommendations;
+     * other dimensions are set to current values to avoid noisy diffs.
+     */
+    private String getPrimaryDimension(String serviceName) {
+        return switch (serviceName) {
+            case "cpu-hungry-service" -> "CPU";
+            case "memory-leaker-service" -> "MEMORY";
+            case "db-connection-service" -> "CONNECTION_POOL";
+            default -> "CPU"; // default to CPU analysis
+        };
+    }
+
     private String getCurrentConfig(String serviceName, String field) {
         return switch (serviceName + ":" + field) {
-            case "cpu-hungry-service:cpuRequest" -> "100m";
-            case "cpu-hungry-service:cpuLimit" -> "200m";
+            case "cpu-hungry-service:cpuRequest" -> "50m";
+            case "cpu-hungry-service:cpuLimit" -> "100m";
             case "cpu-hungry-service:memoryRequest" -> "256Mi";
             case "cpu-hungry-service:memoryLimit" -> "512Mi";
             case "memory-leaker-service:cpuRequest" -> "200m";

@@ -322,42 +322,20 @@
                         <!-- Right Column (1/3) -->
                         <div class="flex flex-col gap-6">
 
-                            <!-- CPU Usage vs Limits -->
+                            <!-- Service-Specific Chart -->
                             <div
                                 class="bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] p-5 shadow-sm animate-fade-in animate-fade-in-delay-1">
-                                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">CPU Usage vs Limits
+                                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1" id="chart-title">
+                                    Resource Usage
                                 </h3>
-                                <p class="text-sm text-slate-500 mb-4">Last 30 Days</p>
-                                <div class="relative h-40 w-full mb-4">
-                                    <svg class="overflow-visible" fill="none" height="100%" preserveAspectRatio="none"
-                                        viewBox="0 0 400 150" width="100%" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M0 120 C 50 120, 100 40, 150 40 C 200 40, 250 80, 300 80 S 350 20, 400 20 V 150 H 0 Z"
-                                            fill="url(#gradient-cpu)" opacity="0.4"></path>
-                                        <path
-                                            d="M0 120 C 50 120, 100 40, 150 40 C 200 40, 250 80, 300 80 S 350 20, 400 20"
-                                            fill="none" stroke="#137fec" stroke-width="2"></path>
-                                        <line stroke="#ef4444" stroke-dasharray="4 2" stroke-width="1" x1="0" x2="400"
-                                            y1="10" y2="10"></line>
-                                        <line stroke="#22c55e" stroke-dasharray="4 2" stroke-width="1" x1="0" x2="400"
-                                            y1="60" y2="60"></line>
-                                        <defs>
-                                            <linearGradient gradientUnits="userSpaceOnUse" id="gradient-cpu" x1="200"
-                                                x2="200" y1="0" y2="150">
-                                                <stop stop-color="#137fec" stop-opacity="0.5"></stop>
-                                                <stop offset="1" stop-color="#137fec" stop-opacity="0"></stop>
-                                            </linearGradient>
-                                        </defs>
-                                    </svg>
-                                    <div class="absolute top-[8px] right-0 text-[10px] text-red-500 bg-surface-light dark:bg-[#1d2832] px-1"
-                                        id="cpu-limit-current">Limit (Curr): ...</div>
-                                    <div class="absolute top-[58px] right-0 text-[10px] text-green-600 bg-surface-light dark:bg-[#1d2832] px-1"
-                                        id="cpu-limit-new">Limit (New): ...</div>
+                                <p class="text-sm text-slate-500 mb-4" id="chart-subtitle">Last 30 Days</p>
+                                <div class="relative h-40 w-full mb-4" id="chart-container">
+                                    <!-- Dynamic SVG chart populated by JS -->
                                 </div>
                                 <div class="flex justify-between items-center text-sm">
-                                    <span class="text-slate-500">Avg Usage</span>
+                                    <span class="text-slate-500" id="chart-avg-label">Avg Usage</span>
                                     <span class="font-mono font-bold text-slate-900 dark:text-white"
-                                        id="cpu-avg-usage">...</span>
+                                        id="chart-avg-value">...</span>
                                 </div>
                             </div>
 
@@ -505,7 +483,9 @@
                 estimatedMonthlySavings: 31.62,
                 p95CpuUsage: 52.3, p95MemoryUsage: 62.1,
                 cpuThrottlingDetected: false, memoryLeakDetected: false,
-                connectionPoolExhaustion: true
+                connectionPoolExhaustion: true,
+                currentMaxPoolSize: 5, currentMinIdle: 2,
+                recommendedMaxPoolSize: 60, recommendedMinIdle: 12
             }
         };
 
@@ -633,6 +613,154 @@
 
         // ─── YAML Diff Viewer ───────────────────────────────
 
+        function renderServiceChart(service) {
+            const container = document.getElementById('chart-container');
+            const titleEl = document.getElementById('chart-title');
+            const subtitleEl = document.getElementById('chart-subtitle');
+            const avgLabel = document.getElementById('chart-avg-label');
+            const avgValue = document.getElementById('chart-avg-value');
+            const svc = service.serviceName || '';
+            const W = 400, H = 150;
+
+            if (svc.includes('memory-leaker')) {
+                renderMemoryChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H);
+            } else if (svc.includes('db-connection')) {
+                renderPoolChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H);
+            } else {
+                renderCpuChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H);
+            }
+        }
+
+        function renderCpuChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H) {
+            titleEl.textContent = 'CPU Usage vs Limits';
+            subtitleEl.textContent = 'Last 30 Days';
+            avgLabel.textContent = 'Avg Usage';
+
+            const parseMilli = (s) => parseInt((s || '100m').replace('m', ''));
+            const currentLimit = parseMilli(service.currentCpuLimit);
+            const recommendedLimit = parseMilli(service.recommendedCpuLimit);
+            const maxVal = Math.max(currentLimit, recommendedLimit) * 1.2;
+
+            const points = 30;
+            const usage = [];
+            for (let i = 0; i < points; i++) {
+                const base = currentLimit * 0.65;
+                const variance = currentLimit * 0.45;
+                const spike = (i % 7 < 2) ? currentLimit * 0.3 : 0;
+                usage.push(Math.min(maxVal, base + Math.sin(i * 0.8) * variance * 0.5 + Math.random() * variance * 0.5 + spike));
+            }
+
+            const avg = Math.round(usage.reduce((a, b) => a + b, 0) / usage.length);
+            avgValue.textContent = avg + 'm';
+
+            renderAreaChart(container, usage, maxVal, W, H, {
+                currentLimit, recommendedLimit,
+                currentLabel: `Limit (Curr): ${service.currentCpuLimit}`,
+                recLabel: `Limit (Rec): ${service.recommendedCpuLimit}`,
+                color: '#137fec'
+            });
+        }
+
+        function renderMemoryChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H) {
+            titleEl.textContent = 'Memory Usage vs Limits';
+            subtitleEl.textContent = 'Last 30 Days — Heap Usage';
+            avgLabel.textContent = 'P95 Usage';
+
+            const parseMi = (s) => parseInt((s || '256Mi').replace('Mi', '').replace('Gi', '') * ((s || '').includes('Gi') ? 1024 : 1));
+            const currentLimit = parseMi(service.currentMemoryLimit);
+            const recommendedLimit = parseMi(service.recommendedMemoryLimit);
+            const maxVal = Math.max(currentLimit, recommendedLimit) * 1.3;
+
+            // Memory leak pattern: steadily climbing with noise
+            const points = 30;
+            const usage = [];
+            const startUsage = currentLimit * 0.3;
+            const endUsage = currentLimit * 0.85;
+            for (let i = 0; i < points; i++) {
+                const progress = i / (points - 1);
+                const base = startUsage + (endUsage - startUsage) * progress;
+                const noise = (Math.random() - 0.5) * currentLimit * 0.06;
+                usage.push(Math.max(0, base + noise));
+            }
+
+            avgValue.textContent = Math.round(usage[Math.floor(points * 0.95)]) + 'Mi';
+
+            renderAreaChart(container, usage, maxVal, W, H, {
+                currentLimit, recommendedLimit,
+                currentLabel: `Limit: ${service.currentMemoryLimit}`,
+                recLabel: `Rec: ${service.recommendedMemoryLimit}`,
+                color: '#8b5cf6'
+            });
+        }
+
+        function renderPoolChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H) {
+            titleEl.textContent = 'Connection Pool Usage';
+            subtitleEl.textContent = 'Active Connections — Last 30 Days';
+            avgLabel.textContent = 'Peak Active';
+
+            const currentMax = service.currentMaxPoolSize || 5;
+            const recommendedMax = service.recommendedMaxPoolSize || currentMax;
+            const maxVal = Math.max(currentMax, recommendedMax) * 1.4;
+
+            // Connection usage pattern: bursts reaching near max
+            const points = 30;
+            const usage = [];
+            for (let i = 0; i < points; i++) {
+                const base = currentMax * 0.5;
+                const variance = currentMax * 0.35;
+                const burst = (i % 5 < 2) ? currentMax * 0.45 : 0;
+                usage.push(Math.min(currentMax, base + Math.random() * variance + burst));
+            }
+
+            const peak = Math.round(Math.max(...usage));
+            avgValue.textContent = peak + ' / ' + currentMax;
+
+            renderAreaChart(container, usage, maxVal, W, H, {
+                currentLimit: currentMax, recommendedLimit: recommendedMax,
+                currentLabel: `Max Pool (Curr): ${currentMax}`,
+                recLabel: `Max Pool (Rec): ${recommendedMax}`,
+                color: '#f59e0b'
+            });
+        }
+
+        function renderAreaChart(container, usage, maxVal, W, H, opts) {
+            const points = usage.length;
+            const toY = (val) => H - (val / maxVal) * H;
+            const toX = (idx) => (idx / (points - 1)) * W;
+            const currentLimitY = toY(opts.currentLimit);
+            const recommendedLimitY = toY(opts.recommendedLimit);
+            const limitsAreSame = opts.currentLimit === opts.recommendedLimit;
+
+            let pathD = `M${toX(0)} ${toY(usage[0])}`;
+            for (let i = 1; i < points; i++) {
+                const cpx = (toX(i - 1) + toX(i)) / 2;
+                pathD += ` C ${cpx} ${toY(usage[i - 1])}, ${cpx} ${toY(usage[i])}, ${toX(i)} ${toY(usage[i])}`;
+            }
+            const areaD = pathD + ` V ${H} H 0 Z`;
+
+            container.innerHTML = `
+                <svg class="overflow-visible" fill="none" height="100%" preserveAspectRatio="none"
+                    viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient gradientUnits="userSpaceOnUse" id="gradient-chart" x1="200" x2="200" y1="0" y2="${H}">
+                            <stop stop-color="${opts.color}" stop-opacity="0.4"></stop>
+                            <stop offset="1" stop-color="${opts.color}" stop-opacity="0.02"></stop>
+                        </linearGradient>
+                    </defs>
+                    <path d="${areaD}" fill="url(#gradient-chart)"></path>
+                    <path d="${pathD}" fill="none" stroke="${opts.color}" stroke-width="2"></path>
+                    <line stroke="#ef4444" stroke-dasharray="6 3" stroke-width="1.5" x1="0" x2="${W}"
+                        y1="${currentLimitY}" y2="${currentLimitY}"></line>
+                    ${!limitsAreSame ? `<line stroke="#22c55e" stroke-dasharray="6 3" stroke-width="1.5" x1="0" x2="${W}"
+                        y1="${recommendedLimitY}" y2="${recommendedLimitY}"></line>` : ''}
+                </svg>
+                <div class="absolute right-0 text-[10px] text-red-500 bg-surface-light dark:bg-[#1d2832] px-1 font-mono"
+                    style="top: ${currentLimitY - 6}px">${opts.currentLabel}</div>
+                ${!limitsAreSame ? `<div class="absolute right-0 text-[10px] text-green-600 bg-surface-light dark:bg-[#1d2832] px-1 font-mono"
+                    style="top: ${recommendedLimitY - 6}px">${opts.recLabel}</div>` : ''}
+            `;
+        }
+
         function renderYamlDiff(service) {
             const container = document.getElementById('yaml-diff');
             const sharedLines = [
@@ -649,24 +777,54 @@
                 '          requests:'
             ];
 
+            // Compare each field individually - only highlight if values differ
+            const cpuReqChanged = service.currentCpuRequest !== service.recommendedCpuRequest;
+            const memReqChanged = service.currentMemoryRequest !== service.recommendedMemoryRequest;
+            const cpuLimChanged = service.currentCpuLimit !== service.recommendedCpuLimit;
+            const memLimChanged = service.currentMemoryLimit !== service.recommendedMemoryLimit;
+
             const currentDiffLines = [
-                { text: `            cpu: ${service.currentCpuRequest}`, type: 'remove' },
-                { text: `            memory: ${service.currentMemoryRequest}`, type: 'remove' },
+                { text: `            cpu: ${service.currentCpuRequest}`, type: cpuReqChanged ? 'remove' : 'normal' },
+                { text: `            memory: ${service.currentMemoryRequest}`, type: memReqChanged ? 'remove' : 'normal' },
             ];
             const currentLimitLines = [
                 { text: '          limits:', type: 'normal' },
-                { text: `            cpu: ${service.currentCpuLimit}`, type: 'remove' },
-                { text: `            memory: ${service.currentMemoryLimit}`, type: 'remove' },
+                { text: `            cpu: ${service.currentCpuLimit}`, type: cpuLimChanged ? 'remove' : 'normal' },
+                { text: `            memory: ${service.currentMemoryLimit}`, type: memLimChanged ? 'remove' : 'normal' },
             ];
 
             const recommendedDiffLines = [
-                { text: `            cpu: ${service.recommendedCpuRequest}`, type: 'add' },
-                { text: `            memory: ${service.recommendedMemoryRequest}`, type: 'add' },
+                { text: `            cpu: ${service.recommendedCpuRequest}`, type: cpuReqChanged ? 'add' : 'normal' },
+                { text: `            memory: ${service.recommendedMemoryRequest}`, type: memReqChanged ? 'add' : 'normal' },
             ];
             const recommendedLimitLines = [
                 { text: '          limits:', type: 'normal' },
-                { text: `            cpu: ${service.recommendedCpuLimit}`, type: 'add' },
-                { text: `            memory: ${service.recommendedMemoryLimit}`, type: 'add' },
+                { text: `            cpu: ${service.recommendedCpuLimit}`, type: cpuLimChanged ? 'add' : 'normal' },
+                { text: `            memory: ${service.recommendedMemoryLimit}`, type: memLimChanged ? 'add' : 'normal' },
+            ];
+
+            // Connection Pool config lines - always shown for all services
+            const currentPoolSize = service.currentMaxPoolSize || 5;
+            const currentMinIdle = service.currentMinIdle || 2;
+            const recommendedPoolSize = service.recommendedMaxPoolSize || currentPoolSize;
+            const recommendedMinIdle = service.recommendedMinIdle || currentMinIdle;
+            const poolSizeChanged = recommendedPoolSize !== currentPoolSize;
+            const minIdleChanged = recommendedMinIdle !== currentMinIdle;
+
+            const poolHeaderLines = [
+                '',
+                '# --- application.yml ---',
+                'spring:',
+                '  datasource:',
+                '    hikari:'
+            ];
+            const currentPoolLines = [
+                { text: `      maximum-pool-size: ${currentPoolSize}`, type: poolSizeChanged ? 'remove' : 'normal' },
+                { text: `      minimum-idle: ${currentMinIdle}`, type: minIdleChanged ? 'remove' : 'normal' },
+            ];
+            const recommendedPoolLines = [
+                { text: `      maximum-pool-size: ${recommendedPoolSize}`, type: poolSizeChanged ? 'add' : 'normal' },
+                { text: `      minimum-idle: ${recommendedMinIdle}`, type: minIdleChanged ? 'add' : 'normal' },
             ];
 
             function renderLine(line) {
@@ -682,17 +840,23 @@
                 return `<div>${escapeHtml(line.text)}</div>`;
             }
 
-            const leftHtml = [
+            let leftHtml = [
                 ...sharedLines.map(l => renderLine(l)),
                 ...currentDiffLines.map(l => renderLine(l)),
                 ...currentLimitLines.map(l => renderLine(l))
             ].join('');
 
-            const rightHtml = [
+            let rightHtml = [
                 ...sharedLines.map(l => renderLine(l)),
                 ...recommendedDiffLines.map(l => renderLine(l)),
                 ...recommendedLimitLines.map(l => renderLine(l))
             ].join('');
+
+            // Always append connection pool section
+            leftHtml += poolHeaderLines.map(l => renderLine(l)).join('');
+            leftHtml += currentPoolLines.map(l => renderLine(l)).join('');
+            rightHtml += poolHeaderLines.map(l => renderLine(l)).join('');
+            rightHtml += recommendedPoolLines.map(l => renderLine(l)).join('');
 
             container.innerHTML = `
             <div class="border-r border-slate-200 dark:border-[#30363d] overflow-x-auto code-scroll p-4">${leftHtml}</div>
@@ -736,6 +900,18 @@
                     icon: 'memory',
                     title: 'Memory Leak Pattern',
                     description: `Memory usage shows linear growth pattern reaching ${service.p95MemoryUsage}% of limits. Consider profiling and increasing memory limits as a stop-gap.`
+                });
+            }
+
+            if (service.connectionPoolExhaustion) {
+                const poolMsg = service.recommendedMaxPoolSize
+                    ? `Current max pool size (${service.currentMaxPoolSize || 5}) is insufficient. Recommended: ${service.recommendedMaxPoolSize} connections.`
+                    : 'Connection pool frequently reaches maximum capacity. Increase maximum-pool-size in application.yml.';
+                insights.push({
+                    color: 'red',
+                    icon: 'cable',
+                    title: 'Connection Pool Exhaustion',
+                    description: poolMsg
                 });
             }
 
@@ -802,11 +978,7 @@
 
             document.getElementById('projected-savings').innerHTML = `-$${service.estimatedMonthlySavings.toFixed(2)}<span class="text-sm font-normal text-slate-400">/mo</span>`;
 
-            document.getElementById('cpu-limit-current').textContent = `Limit (Curr): ${service.currentCpuLimit}`;
-            document.getElementById('cpu-limit-new').textContent = `Limit (New): ${service.recommendedCpuLimit}`;
-
-            const avgCpu = Math.round(parseInt(service.currentCpuRequest) * (service.p95CpuUsage / 100));
-            document.getElementById('cpu-avg-usage').textContent = avgCpu + 'm';
+            renderServiceChart(service);
 
             const baseLatency = 135;
             const projectedLatency = Math.round(baseLatency + (Math.random() * 15));

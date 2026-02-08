@@ -54,4 +54,5 @@ public class MetricsSnapshot {
     private Integer hikariMaxConnections;
     private Integer hikariMinConnections;
     private Long hikariConnectionTimeout;
+    private Integer hikariPendingConnections;
 }

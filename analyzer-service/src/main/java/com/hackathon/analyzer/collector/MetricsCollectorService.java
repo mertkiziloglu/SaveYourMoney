@@ -170,11 +170,12 @@ public class MetricsCollectorService {
                         Math.max(1, metrics.getOrDefault("http_server_requests_seconds_count", 1.0)))
                 .httpRequestDurationMax(metrics.getOrDefault("http_server_requests_seconds_max", 0.0) * 1000)
                 // Connection pool (HikariCP)
-                .hikariActiveConnections(metrics.getOrDefault("hikari_connections_active", 0.0).intValue())
-                .hikariIdleConnections(metrics.getOrDefault("hikari_connections_idle", 0.0).intValue())
-                .hikariMaxConnections(metrics.getOrDefault("hikari_connections_max", 0.0).intValue())
-                .hikariMinConnections(metrics.getOrDefault("hikari_connections_min", 0.0).intValue())
-                .hikariConnectionTimeout(metrics.getOrDefault("hikari_connections_timeout_total", 0.0).longValue())
+                .hikariActiveConnections(metrics.getOrDefault("hikaricp_connections_active", 0.0).intValue())
+                .hikariIdleConnections(metrics.getOrDefault("hikaricp_connections_idle", 0.0).intValue())
+                .hikariMaxConnections(metrics.getOrDefault("hikaricp_connections_max", 0.0).intValue())
+                .hikariMinConnections(metrics.getOrDefault("hikaricp_connections_min", 0.0).intValue())
+                .hikariConnectionTimeout(metrics.getOrDefault("hikaricp_connections_timeout_total", 0.0).longValue())
+                .hikariPendingConnections(metrics.getOrDefault("hikaricp_connections_pending", 0.0).intValue())
                 .build();
     }
 

@@ -1,6 +1,7 @@
 package com.hackathon.cpuhungry.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
@@ -62,7 +63,8 @@ public class CpuIntensiveService {
      * Uses inefficient recursive algorithm intentionally
      */
     public long calculateFibonacci(int n) {
-        if (n <= 1) return n;
+        if (n <= 1)
+            return n;
 
         // Intentionally inefficient recursive implementation for CPU burn
         return calculateFibonacci(n - 1) + calculateFibonacci(n - 2);
@@ -110,9 +112,12 @@ public class CpuIntensiveService {
     // Helper methods
 
     private boolean isPrime(long num) {
-        if (num <= 1) return false;
-        if (num <= 3) return true;
-        if (num % 2 == 0 || num % 3 == 0) return false;
+        if (num <= 1)
+            return false;
+        if (num <= 3)
+            return true;
+        if (num % 2 == 0 || num % 3 == 0)
+            return false;
 
         for (long i = 5; i * i <= num; i += 6) {
             if (num % i == 0 || num % (i + 2) == 0) {
@@ -126,7 +131,8 @@ public class CpuIntensiveService {
         StringBuilder hexString = new StringBuilder();
         for (byte b : bytes) {
             String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) hexString.append('0');
+            if (hex.length() == 1)
+                hexString.append('0');
             hexString.append(hex);
         }
         return hexString.toString();
@@ -140,5 +146,20 @@ public class CpuIntensiveService {
             }
         }
         return matrix;
+    }
+
+    /**
+     * Background task that continuously burns CPU
+     * Runs every 10 seconds to keep process_cpu_usage high
+     */
+    @Scheduled(fixedDelay = 10000)
+    public void backgroundCpuBurn() {
+        // Perform fibonacci(35) - takes significant CPU
+        calculateFibonacci(35);
+        // Perform hashing iterations
+        performHashing("background-burn-" + System.currentTimeMillis(), 2000);
+        // Matrix multiplication
+        multiplyMatrices(80);
+        log.debug("Background CPU burn completed");
     }
 }

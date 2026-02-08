@@ -6,6 +6,7 @@ import com.hackathon.dbconnection.repository.OrderRepository;
 import com.hackathon.dbconnection.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -158,15 +159,15 @@ public class DatabaseService {
         List<User> users = new ArrayList<>();
         for (int i = 0; i < userCount; i++) {
             User user = User.builder()
-                .username("user" + i)
-                .email("user" + i + "@example.com")
-                .firstName("First" + i)
-                .lastName("Last" + i)
-                .createdAt(Instant.now().minus(random.nextInt(365), ChronoUnit.DAYS))
-                .lastLoginAt(Instant.now().minus(random.nextInt(30), ChronoUnit.DAYS))
-                .active(random.nextBoolean())
-                .metadata("Test user metadata " + i)
-                .build();
+                    .username("user" + i)
+                    .email("user" + i + "@example.com")
+                    .firstName("First" + i)
+                    .lastName("Last" + i)
+                    .createdAt(Instant.now().minus(random.nextInt(365), ChronoUnit.DAYS))
+                    .lastLoginAt(Instant.now().minus(random.nextInt(30), ChronoUnit.DAYS))
+                    .active(random.nextBoolean())
+                    .metadata("Test user metadata " + i)
+                    .build();
 
             users.add(userRepository.save(user));
         }
@@ -175,13 +176,13 @@ public class DatabaseService {
         for (User user : users) {
             for (int j = 0; j < ordersPerUser; j++) {
                 Order order = Order.builder()
-                    .user(user)
-                    .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
-                    .totalAmount(random.nextDouble() * 1000)
-                    .status(random.nextBoolean() ? "COMPLETED" : "PENDING")
-                    .orderDate(Instant.now().minus(random.nextInt(180), ChronoUnit.DAYS))
-                    .orderDetails("Test order details for order " + j)
-                    .build();
+                        .user(user)
+                        .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8))
+                        .totalAmount(random.nextDouble() * 1000)
+                        .status(random.nextBoolean() ? "COMPLETED" : "PENDING")
+                        .orderDate(Instant.now().minus(random.nextInt(180), ChronoUnit.DAYS))
+                        .orderDetails("Test order details for order " + j)
+                        .build();
 
                 orderRepository.save(order);
                 totalOrders++;
@@ -216,5 +217,22 @@ public class DatabaseService {
         stats.put("pendingOrders", pendingOrders);
 
         return stats;
+    }
+
+    /**
+     * Background task that continuously pressures connection pool
+     * Runs every 15 seconds, holding connections open to keep pool utilization high
+     */
+    @Scheduled(fixedDelay = 15000)
+    public void backgroundConnectionPressure() {
+        try {
+            // Execute slow query (holds connection for 100-300ms)
+            performSlowQuery();
+            // Execute multiple sequential queries (holds connection longer)
+            performMultipleQueries(5);
+            log.debug("Background connection pressure applied - pool should be under load");
+        } catch (Exception e) {
+            log.debug("Background connection pressure task encountered: {}", e.getMessage());
+        }
     }
 }

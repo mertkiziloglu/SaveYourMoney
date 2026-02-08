@@ -30,17 +30,16 @@ public class MemoryLeakService {
         random.nextBytes(largeData);
 
         CachedData cachedData = new CachedData(
-            key,
-            largeData,
-            Instant.now(),
-            "Metadata for " + key
-        );
+                key,
+                largeData,
+                Instant.now(),
+                "Metadata for " + key);
 
         // LEAK: Never removed from cache!
         leakyCache.put(key, cachedData);
 
         log.debug("Added {}KB to cache. Total cache size: {} items",
-                 dataSizeKB, leakyCache.size());
+                dataSizeKB, leakyCache.size());
 
         return cachedData;
     }
@@ -69,7 +68,7 @@ public class MemoryLeakService {
         result.put("leakyListSize", leakyList.size());
 
         log.debug("Processed {}MB data in {}ms. Leaky list size: {}",
-                 dataSizeMB, duration, leakyList.size());
+                dataSizeMB, duration, leakyList.size());
 
         return result;
     }
@@ -93,15 +92,14 @@ public class MemoryLeakService {
 
             // LEAK: Add to cache too
             leakyCache.put("object-" + i, new CachedData(
-                "object-" + i,
-                data,
-                Instant.now(),
-                "Large object " + i
-            ));
+                    "object-" + i,
+                    data,
+                    Instant.now(),
+                    "Large object " + i));
         }
 
         log.debug("Created {} large objects of {}KB each. Total cache: {} items",
-                 count, sizeKB, leakyCache.size());
+                count, sizeKB, leakyCache.size());
 
         return objects;
     }
@@ -115,15 +113,14 @@ public class MemoryLeakService {
 
         // LEAK: Sessions are never cleaned up!
         leakyCache.put("session-" + sessionId, new CachedData(
-            sessionId,
-            sessionData,
-            Instant.now(),
-            "Session data"
-        ));
+                sessionId,
+                sessionData,
+                Instant.now(),
+                "Session data"));
 
         log.debug("Created session {} with {}KB data. Total sessions in cache: {}",
-                 sessionId, dataSizeKB,
-                 leakyCache.keySet().stream().filter(k -> k.startsWith("session-")).count());
+                sessionId, dataSizeKB,
+                leakyCache.keySet().stream().filter(k -> k.startsWith("session-")).count());
     }
 
     /**
@@ -132,13 +129,13 @@ public class MemoryLeakService {
      */
     @Scheduled(fixedDelay = 30000)
     public void backgroundMemoryLeak() {
-        // Silently leak 5MB every 30 seconds
-        byte[] leak = new byte[5 * 1024 * 1024];
+        // Silently leak 2MB every 30 seconds
+        byte[] leak = new byte[2 * 1024 * 1024];
         random.nextBytes(leak);
         leakyList.add(leak);
 
-        log.debug("Background leak: Added 5MB to leaky list. Total size: {} items",
-                 leakyList.size());
+        log.debug("Background leak: Added 2MB to leaky list. Total size: {} items",
+                leakyList.size());
     }
 
     /**
@@ -146,12 +143,12 @@ public class MemoryLeakService {
      */
     public Map<String, Object> getCacheStats() {
         long totalBytes = leakyCache.values().stream()
-            .mapToLong(CachedData::getSizeInBytes)
-            .sum();
+                .mapToLong(CachedData::getSizeInBytes)
+                .sum();
 
         long leakyListBytes = leakyList.stream()
-            .mapToLong(arr -> arr.length)
-            .sum();
+                .mapToLong(arr -> arr.length)
+                .sum();
 
         Runtime runtime = Runtime.getRuntime();
         long usedMemory = runtime.totalMemory() - runtime.freeMemory();
