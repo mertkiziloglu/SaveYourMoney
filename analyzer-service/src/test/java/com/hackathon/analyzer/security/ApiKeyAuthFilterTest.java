@@ -67,7 +67,6 @@ class ApiKeyAuthFilterTest {
     @Test
     void doFilterInternal_withoutApiKey_shouldNotSetAuthentication() throws ServletException, IOException {
         when(request.getHeader("X-API-Key")).thenReturn(null);
-        when(request.getRequestURI()).thenReturn("/api/analyze/test");
 
         filter.doFilterInternal(request, response, filterChain);
 

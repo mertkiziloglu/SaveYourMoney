@@ -269,7 +269,14 @@ public class AnalyzerController {
         // 3. Latest Resource Recommendation
         Optional<AnalysisResult> latestAnalysis = analyzerService.getLatestAnalysis(serviceName);
         latestAnalysis.ifPresent(analysis -> {
-            insights.put("resourceRecommendation", analysis.getRecommendation());
+            Map<String, Object> recommendation = new HashMap<>();
+            recommendation.put("cpuRequest", analysis.getRecommendedCpuRequest());
+            recommendation.put("cpuLimit", analysis.getRecommendedCpuLimit());
+            recommendation.put("memoryRequest", analysis.getRecommendedMemoryRequest());
+            recommendation.put("memoryLimit", analysis.getRecommendedMemoryLimit());
+            recommendation.put("jvmXms", analysis.getRecommendedJvmXms());
+            recommendation.put("jvmXmx", analysis.getRecommendedJvmXmx());
+            insights.put("resourceRecommendation", recommendation);
             insights.put("estimatedSavings", analysis.getEstimatedMonthlySavings());
         });
 

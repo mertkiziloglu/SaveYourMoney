@@ -28,27 +28,25 @@ import java.util.List;
 @Profile("prod")
 public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
-    @Value("${app.security.api-key:default-api-key-change-in-production}")
+    @Value("${app.security.api-key:${APP_API_KEY:}}")
     private String apiKey;
 
     private static final String API_KEY_HEADER = "X-API-Key";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String requestApiKey = request.getHeader(API_KEY_HEADER);
 
         // Check if API key is present and valid
         if (requestApiKey != null && requestApiKey.equals(apiKey)) {
             // API key is valid - set authentication
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            "api-user",
-                            null,
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_API"))
-                    );
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                    "api-user",
+                    null,
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_API")));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.debug("Valid API key provided for request: {}", request.getRequestURI());
@@ -65,8 +63,8 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
 
         // Don't filter public endpoints
         return path.startsWith("/api/health") ||
-               path.startsWith("/actuator/health") ||
-               path.startsWith("/swagger-ui") ||
-               path.startsWith("/v3/api-docs");
+                path.startsWith("/actuator/health") ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs");
     }
 }

@@ -1,5 +1,7 @@
 package com.hackathon.analyzer.config;
 
+import com.hackathon.analyzer.security.JwtAuthFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -7,125 +9,92 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
- * Security configuration for Analyzer Service
+ * Security configuration for Analyzer Service.
  *
- * For development: All endpoints are open
- * For production: API key or JWT authentication required
+ * - dev profile: All endpoints open (local development)
+ * - default/prod: JWT authentication required for protected endpoints
  */
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthFilter jwtAuthFilter;
+
+    private static final String[] PUBLIC_ENDPOINTS = {
+            "/api/health",
+            "/api/auth/**",
+            "/actuator/**",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            "/h2-console/**"
+    };
+
     /**
-     * Development profile - No authentication required
+     * Development profile — all endpoints open, no authentication.
      */
     @Bean
     @Profile("dev")
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            );
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
 
     /**
-     * Production profile - API key authentication required
-     *
-     * Security features:
-     * - CORS enabled for specific origins
-     * - CSRF protection disabled (stateless REST API)
-     * - Public endpoints: /api/health, /swagger-ui/**, /v3/api-docs/**
-     * - Protected endpoints: All analysis and metrics endpoints
+     * Production profile — JWT + API Key authentication for protected endpoints.
      */
     @Bean
     @Profile("prod")
     public SecurityFilterChain prodSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers(
-                    "/api/health",
-                    "/actuator/health",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/swagger-ui.html"
-                ).permitAll()
-                // Protected endpoints - require authentication
-                .requestMatchers(
-                    "/api/analyze/**",
-                    "/api/metrics/**",
-                    "/api/dashboard"
-                ).authenticated()
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .httpBasic(httpBasic -> {});  // Simple HTTP Basic auth for demo
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    /**
-     * CORS configuration
-     *
-     * Allows requests from:
-     * - localhost (development)
-     * - GCP Cloud Run URLs (production)
-     * - Firebase Hosting (dashboard)
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration config = new CorsConfiguration();
 
-        // Allowed origins
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:8080",      // Dashboard local
-            "http://localhost:3000",      // React dev server
-            "https://*.run.app",          // GCP Cloud Run
-            "https://*.web.app",          // Firebase Hosting
-            "https://*.firebaseapp.com"   // Firebase Hosting
-        ));
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:8080",
+                "http://localhost:3000",
+                "http://localhost:5500",
+                "http://127.0.0.1:5500"));
 
-        // Allowed methods
-        configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
+        config.setAllowedOriginPatterns(Arrays.asList(
+                "https://*.run.app",
+                "https://*.web.app",
+                "https://*.firebaseapp.com"));
 
-        // Allowed headers
-        configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type",
-            "X-API-Key",
-            "X-Requested-With"
-        ));
-
-        // Allow credentials
-        configuration.setAllowCredentials(true);
-
-        // Max age
-        configuration.setMaxAge(3600L);
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-API-Key", "X-Requested-With"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
