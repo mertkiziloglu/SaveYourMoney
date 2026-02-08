@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI Recommendations - Save Your Money</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Noto+Sans:wght@400;500;700&family=Fira+Code:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1d2832",
+                        "surface-light": "#ffffff",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["Fira Code", "monospace"],
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .icon-filled {
+            font-variation-settings: 'FILL' 1;
+        }
+
+        .recommendation-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .recommendation-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .savings-shimmer {
+            background: linear-gradient(90deg, transparent 0%, rgba(19, 127, 236, 0.08) 50%, transparent 100%);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display transition-colors duration-200">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar -->
+        <aside
+            class="hidden md:flex flex-col w-64 h-full bg-surface-light dark:bg-[#111a22] border-r border-slate-200 dark:border-[#233648] shrink-0 z-20">
+            <div class="p-6 flex items-center gap-3">
+                <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined text-xl">savings</span>
+                </div>
+                <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white">Save Your Money</span>
+            </div>
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors"
+                    href="index.html">
+                    <span class="material-symbols-outlined group-hover:text-primary">dashboard</span>
+                    <span class="text-sm font-medium">Dashboard</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors"
+                    href="deployments.html">
+                    <span class="material-symbols-outlined group-hover:text-primary">layers</span>
+                    <span class="text-sm font-medium">Deployments</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary dark:bg-[#233648] dark:text-white"
+                    href="recommendations.html">
+                    <span class="material-symbols-outlined icon-filled">auto_awesome</span>
+                    <span class="text-sm font-medium">Recommendations</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#233648] group transition-colors"
+                    href="cost-analysis.html">
+                    <span class="material-symbols-outlined group-hover:text-primary">attach_money</span>
+                    <span class="text-sm font-medium">Cost Analysis</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-slate-200 dark:border-[#233648]">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="size-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+                        SY</div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-slate-900 dark:text-white">SaveYourMoney</span>
+                        <span class="text-xs text-slate-500 dark:text-slate-400">DevOps Team</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col h-full relative overflow-hidden">
+            <!-- Header -->
+            <header
+                class="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-[#111a22] border-b border-slate-200 dark:border-[#233648] shrink-0">
+                <div class="flex items-center gap-4">
+                    <button class="md:hidden text-slate-500 hover:text-primary">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div class="hidden md:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                        <span>AI Engine</span>
+                        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                        <span class="text-slate-900 dark:text-white font-medium">All Recommendations</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="relative hidden sm:block">
+                        <span
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[20px]">search</span>
+                        <input id="search-input"
+                            class="h-9 w-64 pl-10 pr-4 rounded-full bg-slate-100 dark:bg-[#233648] border-none text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50"
+                            placeholder="Search recommendations..." type="text" />
+                    </div>
+                    <button
+                        onclick="document.documentElement.classList.toggle('dark');localStorage.setItem('theme',document.documentElement.classList.contains('dark')?'dark':'light')"
+                        class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors"
+                        title="Toggle Dark Mode">
+                        <span class="material-symbols-outlined">dark_mode</span>
+                    </button>
+                    <button
+                        class="size-9 flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-[#233648] transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-[#111a22]"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-6 lg:px-10 pb-20">
+                <div class="max-w-[1280px] mx-auto flex flex-col gap-6">
+
+                    <!-- Page Title -->
+                    <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+                        <div>
+                            <h1
+                                class="text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+                                <span class="material-symbols-outlined text-primary text-3xl">auto_awesome</span>
+                                AI Recommendations
+                            </h1>
+                            <p class="text-slate-500 dark:text-[#92adc9] mt-1">Resource optimization insights powered by
+                                usage analytics</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="loadRecommendations()"
+                                class="h-11 px-4 rounded-lg border border-slate-200 dark:border-[#324d67] text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-50 dark:hover:bg-[#233648] transition-colors flex items-center gap-2">
+                                <span class="material-symbols-outlined text-lg">refresh</span>
+                                Refresh
+                            </button>
+                            <button onclick="applyAllRecommendations()"
+                                class="h-11 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-blue-500/20 flex items-center gap-2 transition-all transform active:scale-95">
+                                <span class="material-symbols-outlined text-lg">rocket_launch</span>
+                                Apply All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="summary-cards">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Filter Bar -->
+                    <div
+                        class="bg-surface-light dark:bg-[#1d2832] p-4 rounded-xl border border-slate-200 dark:border-[#324d67] shadow-sm flex flex-col lg:flex-row items-center gap-4">
+                        <div class="flex items-center gap-2 flex-1">
+                            <span class="text-sm font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">Sort
+                                by:</span>
+                            <select id="sort-select" onchange="renderCards()"
+                                class="h-10 pl-3 pr-10 rounded-lg bg-slate-50 dark:bg-[#111a22] border border-slate-200 dark:border-[#324d67] text-sm text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                                <option value="savings-desc">Highest Savings First</option>
+                                <option value="savings-asc">Lowest Savings First</option>
+                                <option value="severity">Severity</option>
+                                <option value="name">Service Name</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-2" id="filter-chips">
+                            <button onclick="filterByType('all')"
+                                class="filter-chip px-3 py-1.5 text-xs font-bold rounded-full border transition-colors bg-primary text-white border-primary"
+                                data-filter="all">All</button>
+                            <button onclick="filterByType('critical')"
+                                class="filter-chip px-3 py-1.5 text-xs font-bold rounded-full border transition-colors bg-white dark:bg-[#111a22] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#324d67] hover:border-red-300 hover:text-red-600"
+                                data-filter="critical">Critical</button>
+                            <button onclick="filterByType('warning')"
+                                class="filter-chip px-3 py-1.5 text-xs font-bold rounded-full border transition-colors bg-white dark:bg-[#111a22] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#324d67] hover:border-amber-300 hover:text-amber-600"
+                                data-filter="warning">Warning</button>
+                            <button onclick="filterByType('healthy')"
+                                class="filter-chip px-3 py-1.5 text-xs font-bold rounded-full border transition-colors bg-white dark:bg-[#111a22] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#324d67] hover:border-green-300 hover:text-green-600"
+                                data-filter="healthy">Optimization</button>
+                        </div>
+                    </div>
+
+                    <!-- Recommendation Cards Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="recommendations-grid">
+                        <!-- Populated by JS -->
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- API Scripts -->
+    <script src="services/api.js"></script>
+    <script src="services/github-api.js"></script>
+    <script>
+        const MOCK_DATA = {
+            servicesAnalyzed: 3,
+            totalMonthlySavings: 109.27,
+            totalAnnualSavings: 1311.24,
+            cpuHungryService: {
+                serviceName: 'cpu-hungry-service',
+                currentCpuRequest: '100m', currentCpuLimit: '200m',
+                currentMemoryRequest: '256Mi', currentMemoryLimit: '512Mi',
+                recommendedCpuRequest: '350m', recommendedCpuLimit: '700m',
+                recommendedMemoryRequest: '256Mi', recommendedMemoryLimit: '384Mi',
+                estimatedMonthlySavings: 35.50,
+                p95CpuUsage: 87.5, p95MemoryUsage: 45.2,
+                cpuThrottlingDetected: true, memoryLeakDetected: false
+            },
+            memoryLeakerService: {
+                serviceName: 'memory-leaker-service',
+                currentCpuRequest: '200m', currentCpuLimit: '400m',
+                currentMemoryRequest: '256Mi', currentMemoryLimit: '512Mi',
+                recommendedCpuRequest: '150m', recommendedCpuLimit: '300m',
+                recommendedMemoryRequest: '384Mi', recommendedMemoryLimit: '576Mi',
+                estimatedMonthlySavings: 42.15,
+                p95CpuUsage: 35.8, p95MemoryUsage: 78.9,
+                cpuThrottlingDetected: false, memoryLeakDetected: true
+            },
+            dbConnectionService: {
+                serviceName: 'db-connection-service',
+                currentCpuRequest: '150m', currentCpuLimit: '300m',
+                currentMemoryRequest: '512Mi', currentMemoryLimit: '1Gi',
+                recommendedCpuRequest: '200m', recommendedCpuLimit: '400m',
+                recommendedMemoryRequest: '384Mi', recommendedMemoryLimit: '576Mi',
+                estimatedMonthlySavings: 31.62,
+                p95CpuUsage: 52.3, p95MemoryUsage: 62.1,
+                cpuThrottlingDetected: false, memoryLeakDetected: false,
+                connectionPoolExhaustion: true
+            }
+        };
+
+        let allServices = [];
+        let activeFilter = 'all';
+        let currentData = null;
+        let isLiveData = false;
+
+        function classifyService(service) {
+            const isCritical = (service.cpuThrottlingDetected && service.p95CpuUsage > 90) ||
+                (service.memoryLeakDetected && service.p95MemoryUsage > 85);
+            const hasIssues = service.cpuThrottlingDetected || service.memoryLeakDetected || service.connectionPoolExhaustion;
+            if (isCritical) return 'critical';
+            if (hasIssues) return 'warning';
+            return 'healthy';
+        }
+
+        function getIssueLabel(service) {
+            if (service.cpuThrottlingDetected) return 'CPU Throttling Detected';
+            if (service.memoryLeakDetected) return 'Memory Leak Risk';
+            if (service.connectionPoolExhaustion) return 'Connection Pool Exhaustion';
+            return 'Over-provisioned Resources';
+        }
+
+        function getIssueIcon(service) {
+            if (service.cpuThrottlingDetected) return 'local_fire_department';
+            if (service.memoryLeakDetected) return 'memory';
+            if (service.connectionPoolExhaustion) return 'cable';
+            return 'tune';
+        }
+
+        function renderDataSourceBadge() {
+            const existing = document.getElementById('data-source-badge');
+            if (existing) existing.remove();
+
+            const badge = document.createElement('span');
+            badge.id = 'data-source-badge';
+            if (isLiveData) {
+                badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800';
+                badge.innerHTML = '<span class="size-2 rounded-full bg-green-500 animate-pulse"></span> Live Data';
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800';
+                badge.innerHTML = '<span class="material-symbols-outlined text-[14px]">science</span> Demo Mode';
+            }
+
+            const titleEl = document.querySelector('h1');
+            if (titleEl) titleEl.appendChild(badge);
+        }
+
+        function renderSummary(data) {
+            const container = document.getElementById('summary-cards');
+            const totalSavings = data.totalMonthlySavings || 0;
+            const annualSavings = data.totalAnnualSavings || totalSavings * 12;
+            const serviceCount = data.servicesAnalyzed || 0;
+
+            container.innerHTML = `
+            <div class="bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] p-6 shadow-sm relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-[0.04]">
+                    <span class="material-symbols-outlined text-[100px] text-slate-900 dark:text-white">auto_awesome</span>
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-primary text-xl">lightbulb</span>
+                    <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Active Recommendations</span>
+                </div>
+                <div class="text-4xl font-black text-slate-900 dark:text-white">${serviceCount}</div>
+                <p class="text-xs text-slate-400 mt-2">Across all monitored clusters</p>
+            </div>
+            <div class="bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] p-6 shadow-sm relative overflow-hidden savings-shimmer">
+                <div class="absolute -right-4 -top-4 opacity-[0.04]">
+                    <span class="material-symbols-outlined text-[100px] text-green-600">savings</span>
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-green-600 text-xl">trending_down</span>
+                    <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Projected Monthly Savings</span>
+                </div>
+                <div class="text-4xl font-black text-green-600 dark:text-green-400">-$${totalSavings.toFixed(0)}</div>
+                <p class="text-xs text-slate-400 mt-2">If all recommendations applied</p>
+            </div>
+            <div class="bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] p-6 shadow-sm relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-[0.04]">
+                    <span class="material-symbols-outlined text-[100px] text-blue-600">account_balance</span>
+                </div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-blue-600 text-xl">calendar_month</span>
+                    <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Annual Savings Potential</span>
+                </div>
+                <div class="text-4xl font-black text-blue-600 dark:text-blue-400">-$${Math.round(annualSavings)}</div>
+                <p class="text-xs text-slate-400 mt-2">Over 12 months projection</p>
+            </div>
+        `;
+        }
+
+        function renderCards() {
+            const container = document.getElementById('recommendations-grid');
+            const sort = document.getElementById('sort-select').value;
+
+            let filtered = activeFilter === 'all'
+                ? [...allServices]
+                : allServices.filter(s => classifyService(s) === activeFilter);
+
+            switch (sort) {
+                case 'savings-desc':
+                    filtered.sort((a, b) => b.estimatedMonthlySavings - a.estimatedMonthlySavings);
+                    break;
+                case 'savings-asc':
+                    filtered.sort((a, b) => a.estimatedMonthlySavings - b.estimatedMonthlySavings);
+                    break;
+                case 'severity':
+                    const order = { critical: 0, warning: 1, healthy: 2 };
+                    filtered.sort((a, b) => order[classifyService(a)] - order[classifyService(b)]);
+                    break;
+                case 'name':
+                    filtered.sort((a, b) => a.serviceName.localeCompare(b.serviceName));
+                    break;
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-16">
+                    <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-600">filter_alt_off</span>
+                    <p class="text-slate-500 font-medium mt-3">No recommendations match this filter</p>
+                </div>
+            `;
+                return;
+            }
+
+            container.innerHTML = filtered.map(service => {
+                const sev = classifyService(service);
+                const issueLabel = getIssueLabel(service);
+                const issueIcon = getIssueIcon(service);
+
+                const sevColors = {
+                    critical: { badge: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800', accent: 'border-l-red-500', icon: 'text-red-600 dark:text-red-400' },
+                    warning: { badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800', accent: 'border-l-amber-500', icon: 'text-amber-600 dark:text-amber-400' },
+                    healthy: { badge: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800', accent: 'border-l-primary', icon: 'text-primary' }
+                };
+                const colors = sevColors[sev];
+                const sevLabel = sev === 'critical' ? 'Critical' : sev === 'warning' ? 'Warning' : 'Optimization';
+
+                return `
+                <div class="recommendation-card bg-surface-light dark:bg-[#1d2832] rounded-xl border border-slate-200 dark:border-[#324d67] shadow-sm overflow-hidden border-l-4 ${colors.accent} cursor-pointer" onclick="viewDetail('${service.serviceName}')">
+                    <div class="p-5">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="size-10 rounded-lg bg-slate-100 dark:bg-[#111a22] flex items-center justify-center">
+                                    <span class="material-symbols-outlined ${colors.icon}">${issueIcon}</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">${service.serviceName}</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">prod-cluster-east-1</p>
+                                </div>
+                            </div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${colors.badge} border">${sevLabel}</span>
+                        </div>
+
+                        <div class="bg-slate-50 dark:bg-[#111a22] rounded-lg p-3 mb-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="material-symbols-outlined text-slate-400 text-[16px]">psychology</span>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">AI Insight</span>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">${issueLabel}. ${sev === 'critical' ? 'Immediate action recommended.' : sev === 'warning' ? 'Review suggested within 48h.' : 'Safe to apply at next maintenance window.'}</p>
+                        </div>
+
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Current</span>
+                                <div class="flex gap-2">
+                                    <span class="text-xs font-mono bg-slate-100 dark:bg-[#233648] px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#324d67]">CPU: ${service.currentCpuRequest}</span>
+                                    <span class="text-xs font-mono bg-slate-100 dark:bg-[#233648] px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#324d67]">RAM: ${service.currentMemoryRequest}</span>
+                                </div>
+                            </div>
+                            <span class="material-symbols-outlined text-primary text-xl">arrow_forward</span>
+                            <div class="flex flex-col gap-1 items-end">
+                                <span class="text-[10px] uppercase tracking-wider font-bold text-primary">Recommended</span>
+                                <div class="flex gap-2">
+                                    <span class="text-xs font-mono bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded text-primary font-bold border border-blue-100 dark:border-blue-800">CPU: ${service.recommendedCpuRequest}</span>
+                                    <span class="text-xs font-mono bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded text-primary font-bold border border-blue-100 dark:border-blue-800">RAM: ${service.recommendedMemoryRequest}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-5 py-3 bg-slate-50/50 dark:bg-[#111a22]/50 border-t border-slate-200 dark:border-[#324d67] flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-green-600 text-lg">savings</span>
+                            <span class="text-green-600 dark:text-green-400 font-bold text-sm">-$${service.estimatedMonthlySavings.toFixed(0)}/mo</span>
+                        </div>
+                        <span class="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
+                            View Details
+                            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                        </span>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function filterByType(type) {
+            activeFilter = type;
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                if (chip.dataset.filter === type) {
+                    chip.className = 'filter-chip px-3 py-1.5 text-xs font-bold rounded-full border transition-colors bg-primary text-white border-primary';
+                } else {
+                    chip.className = 'filter-chip px-3 py-1.5 text-xs font-bold rounded-full border transition-colors bg-white dark:bg-[#111a22] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-[#324d67]';
+                }
+            });
+            renderCards();
+        }
+
+        function viewDetail(serviceName) {
+            window.location.href = `recommendation-detail.html?service=${serviceName}`;
+        }
+
+        async function applyAllRecommendations() {
+            if (!GitHubAPI.isConfigured()) {
+                showToast('Please configure GitHub first from a recommendation detail page', 'warning');
+                return;
+            }
+
+            const btn = event.target.closest('button');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined text-lg animate-spin">progress_activity</span> Creating PRs...';
+
+            let created = 0;
+            let failed = 0;
+
+            for (const service of allServices) {
+                try {
+                    const result = await GitHubAPI.createOptimizationPR(service);
+                    showToast(`PR #${result.prNumber} created for ${service.serviceName}`, 'success');
+                    created++;
+                } catch (error) {
+                    showToast(`Failed for ${service.serviceName}: ${error.message}`, 'error');
+                    failed++;
+                }
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined text-lg">rocket_launch</span> Apply All';
+
+            if (created > 0) {
+                showToast(`${created} PR(s) created successfully${failed > 0 ? `, ${failed} failed` : ''}`, created > 0 && failed === 0 ? 'success' : 'warning');
+            }
+        }
+
+        async function loadRecommendations() {
+            let data = null;
+            isLiveData = false;
+
+            try {
+                data = await API.getDashboard();
+                if (data && data.servicesAnalyzed && data.servicesAnalyzed > 0) {
+                    isLiveData = true;
+                    showToast('Live data loaded from Analyzer Service', 'success');
+                } else {
+                    data = MOCK_DATA;
+                }
+            } catch {
+                data = MOCK_DATA;
+            }
+
+            currentData = data;
+
+            allServices = ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService']
+                .filter(key => data[key])
+                .map(key => data[key]);
+
+            renderSummary(data);
+            renderCards();
+            renderDataSourceBadge();
+        }
+
+        // Wire search — separate from load to avoid duplicate listeners
+        let searchWired = false;
+        function wireSearch() {
+            if (searchWired) return;
+            searchWired = true;
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', () => {
+                const q = searchInput.value.toLowerCase();
+                const data = currentData || MOCK_DATA;
+                allServices = ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService']
+                    .filter(key => data[key])
+                    .map(key => data[key])
+                    .filter(s => s.serviceName.toLowerCase().includes(q));
+                renderCards();
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-amber-500' };
+            const icons = { success: 'check_circle', error: 'error', info: 'info', warning: 'warning' };
+            const toast = document.createElement('div');
+            toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transform transition-all duration-300 translate-x-full opacity-0`;
+            toast.innerHTML = `<span class="material-symbols-outlined text-xl">${icons[type] || icons.info}</span><span class="font-medium">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.classList.remove('translate-x-full', 'opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecommendations();
+            wireSearch();
+        });
+
+        // Restore dark mode
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
+</body>
+
+</html>
