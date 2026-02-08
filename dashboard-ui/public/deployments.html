@@ -226,9 +226,9 @@
     <script>
         // Mock data fallback
         const MOCK_DATA = {
-            servicesAnalyzed: 3,
-            totalMonthlySavings: 109.27,
-            totalAnnualSavings: 1311.24,
+            servicesAnalyzed: 4,
+            totalMonthlySavings: 97.00,
+            totalAnnualSavings: 1164.00,
             cpuHungryService: {
                 serviceName: 'cpu-hungry-service',
                 currentCpuRequest: '100m',
@@ -239,7 +239,7 @@
                 recommendedCpuLimit: '700m',
                 recommendedMemoryRequest: '256Mi',
                 recommendedMemoryLimit: '384Mi',
-                estimatedMonthlySavings: 35.50,
+                estimatedMonthlySavings: -15.50,
                 p95CpuUsage: 87.5,
                 p95MemoryUsage: 45.2,
                 cpuThrottlingDetected: true,
@@ -255,7 +255,7 @@
                 recommendedCpuLimit: '300m',
                 recommendedMemoryRequest: '384Mi',
                 recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 42.15,
+                estimatedMonthlySavings: -18.25,
                 p95CpuUsage: 35.8,
                 p95MemoryUsage: 78.9,
                 cpuThrottlingDetected: false,
@@ -271,12 +271,29 @@
                 recommendedCpuLimit: '400m',
                 recommendedMemoryRequest: '384Mi',
                 recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 31.62,
+                estimatedMonthlySavings: -11.75,
                 p95CpuUsage: 52.3,
                 p95MemoryUsage: 62.1,
                 cpuThrottlingDetected: false,
                 memoryLeakDetected: false,
                 connectionPoolExhaustion: true
+            },
+            greedyService: {
+                serviceName: 'greedy-service',
+                currentCpuRequest: '1000m',
+                currentCpuLimit: '2000m',
+                currentMemoryRequest: '2Gi',
+                currentMemoryLimit: '4Gi',
+                recommendedCpuRequest: '100m',
+                recommendedCpuLimit: '200m',
+                recommendedMemoryRequest: '256Mi',
+                recommendedMemoryLimit: '512Mi',
+                estimatedMonthlySavings: 142.50,
+                p95CpuUsage: 8.5,
+                p95MemoryUsage: 12.3,
+                cpuThrottlingDetected: false,
+                memoryLeakDetected: false,
+                connectionPoolExhaustion: false
             }
         };
 
@@ -341,7 +358,8 @@
                 const services = [
                     { key: 'cpuHungryService', name: 'cpu-hungry-service', cluster: 'demo-cluster-local' },
                     { key: 'memoryLeakerService', name: 'memory-leaker-service', cluster: 'demo-cluster-local' },
-                    { key: 'dbConnectionService', name: 'db-connection-service', cluster: 'demo-cluster-local' }
+                    { key: 'dbConnectionService', name: 'db-connection-service', cluster: 'demo-cluster-local' },
+                    { key: 'greedyService', name: 'greedy-service', cluster: 'demo-cluster-local' }
                 ];
 
                 services.forEach(({ key, name, cluster }) => {
@@ -403,7 +421,7 @@
                                         </span>
                                         <span class="text-primary font-medium">AI Recommendation Available</span>
                                     </div>
-                                    <div class="text-xs text-slate-500 mt-0.5">Save approx. $${Math.round(service.estimatedMonthlySavings || 0)}/mo</div>
+                                    <div class="text-xs ${service.estimatedMonthlySavings >= 0 ? 'text-green-600' : 'text-red-500'} mt-0.5 font-medium">${service.estimatedMonthlySavings >= 0 ? '+' : '-'}$${Math.abs(Math.round(service.estimatedMonthlySavings || 0))}/mo</div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <button onclick="viewDetail('${service.serviceName}')" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 dark:border-[#324d67] shadow-sm text-sm font-medium rounded-md text-slate-700 dark:text-slate-200 bg-white dark:bg-[#111a22] hover:bg-slate-50 dark:hover:bg-[#233648] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">

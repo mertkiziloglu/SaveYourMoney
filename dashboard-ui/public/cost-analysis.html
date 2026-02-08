@@ -296,12 +296,14 @@
                                 <svg class="transform -rotate-90" height="200" viewBox="0 0 200 200" width="200">
                                     <circle class="dark:stroke-slate-700" cx="100" cy="100" fill="none" r="70"
                                         stroke="#f1f5f9" stroke-width="20"></circle>
+                                    <circle cx="100" cy="100" fill="none" r="70" stroke="#ef4444"
+                                        stroke-dasharray="220 440" stroke-dashoffset="0" stroke-width="20"></circle>
                                     <circle cx="100" cy="100" fill="none" r="70" stroke="#137fec"
-                                        stroke-dasharray="176 440" stroke-dashoffset="0" stroke-width="20"></circle>
+                                        stroke-dasharray="88 440" stroke-dashoffset="-220" stroke-width="20"></circle>
                                     <circle cx="100" cy="100" fill="none" r="70" stroke="#06b6d4"
-                                        stroke-dasharray="110 440" stroke-dashoffset="-176" stroke-width="20"></circle>
+                                        stroke-dasharray="66 440" stroke-dashoffset="-308" stroke-width="20"></circle>
                                     <circle cx="100" cy="100" fill="none" r="70" stroke="#22c55e"
-                                        stroke-dasharray="88 440" stroke-dashoffset="-286" stroke-width="20"></circle>
+                                        stroke-dasharray="66 440" stroke-dashoffset="-374" stroke-width="20"></circle>
                                 </svg>
                                 <div class="absolute inset-0 flex flex-col items-center justify-center">
                                     <span class="text-2xl font-black text-slate-900 dark:text-white"
@@ -356,9 +358,9 @@
     <script>
         // Mock data fallback
         const MOCK_DATA = {
-            servicesAnalyzed: 3,
-            totalMonthlySavings: 109.27,
-            totalAnnualSavings: 1311.24,
+            servicesAnalyzed: 4,
+            totalMonthlySavings: 97.00,
+            totalAnnualSavings: 1164.00,
             cpuHungryService: {
                 serviceName: 'cpu-hungry-service',
                 currentCpuRequest: '100m',
@@ -369,7 +371,7 @@
                 recommendedCpuLimit: '700m',
                 recommendedMemoryRequest: '256Mi',
                 recommendedMemoryLimit: '384Mi',
-                estimatedMonthlySavings: 35.50,
+                estimatedMonthlySavings: -15.50,
                 p95CpuUsage: 87.5,
                 p95MemoryUsage: 45.2,
                 cpuThrottlingDetected: true,
@@ -385,7 +387,7 @@
                 recommendedCpuLimit: '300m',
                 recommendedMemoryRequest: '384Mi',
                 recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 42.15,
+                estimatedMonthlySavings: -18.25,
                 p95CpuUsage: 35.8,
                 p95MemoryUsage: 78.9,
                 cpuThrottlingDetected: false,
@@ -401,12 +403,29 @@
                 recommendedCpuLimit: '400m',
                 recommendedMemoryRequest: '384Mi',
                 recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 31.62,
+                estimatedMonthlySavings: -11.75,
                 p95CpuUsage: 52.3,
                 p95MemoryUsage: 62.1,
                 cpuThrottlingDetected: false,
                 memoryLeakDetected: false,
                 connectionPoolExhaustion: true
+            },
+            greedyService: {
+                serviceName: 'greedy-service',
+                currentCpuRequest: '1000m',
+                currentCpuLimit: '2000m',
+                currentMemoryRequest: '2Gi',
+                currentMemoryLimit: '4Gi',
+                recommendedCpuRequest: '100m',
+                recommendedCpuLimit: '200m',
+                recommendedMemoryRequest: '256Mi',
+                recommendedMemoryLimit: '512Mi',
+                estimatedMonthlySavings: 142.50,
+                p95CpuUsage: 8.5,
+                p95MemoryUsage: 12.3,
+                cpuThrottlingDetected: false,
+                memoryLeakDetected: false,
+                connectionPoolExhaustion: false
             }
         };
 
@@ -433,12 +452,18 @@
                 // Calculate totals
                 const monthlySpend = 500; // Base cost
                 const monthlySavings = data.totalMonthlySavings || 0;
-                const annualSavings = data.totalAnnualSavings || 0;
+
+                // Calculate YTD: months elapsed since Jan 1st of current year
+                const now = new Date();
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+                const msElapsed = now - startOfYear;
+                const monthsElapsed = msElapsed / (1000 * 60 * 60 * 24 * 30.44); // average month
+                const ytdSavings = monthlySavings * monthsElapsed;
 
                 // Update summary cards
                 document.getElementById('monthly-spend').textContent = '$' + monthlySpend.toFixed(2);
                 document.getElementById('potential-savings').textContent = '$' + monthlySavings.toFixed(2);
-                document.getElementById('total-savings').textContent = '$' + Math.round(annualSavings);
+                document.getElementById('total-savings').textContent = '$' + Math.round(ytdSavings);
 
                 const savingsPercent = ((monthlySavings / monthlySpend) * 100).toFixed(1);
                 document.getElementById('savings-percent').textContent = savingsPercent + '% of spend';
@@ -452,9 +477,10 @@
                 breakdown.innerHTML = '';
 
                 const services = [
-                    { name: 'cpu-hungry-service', data: data.cpuHungryService, color: 'bg-primary', percent: 40 },
-                    { name: 'memory-leaker-service', data: data.memoryLeakerService, color: 'bg-cyan-500', percent: 35 },
-                    { name: 'db-connection-service', data: data.dbConnectionService, color: 'bg-green-500', percent: 25 }
+                    { name: 'greedy-service', data: data.greedyService, color: 'bg-red-500', percent: 50 },
+                    { name: 'cpu-hungry-service', data: data.cpuHungryService, color: 'bg-primary', percent: 20 },
+                    { name: 'memory-leaker-service', data: data.memoryLeakerService, color: 'bg-cyan-500', percent: 15 },
+                    { name: 'db-connection-service', data: data.dbConnectionService, color: 'bg-green-500', percent: 15 }
                 ];
 
                 services.forEach(service => {
@@ -475,16 +501,20 @@
                 const tbody = document.getElementById('wasteful-resources');
                 tbody.innerHTML = '';
 
-                ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService'].forEach(key => {
+                ['greedyService', 'cpuHungryService', 'memoryLeakerService', 'dbConnectionService'].forEach(key => {
                     if (data[key]) {
                         const service = data[key];
-                        const issueType = service.cpuThrottlingDetected ? 'Over-provisioned CPU' :
-                            service.memoryLeakDetected ? 'Memory Leak Risk' :
-                                service.connectionPoolExhaustion ? 'Connection Pool Issue' : 'Idle Resources';
+                        const isGreedy = service.serviceName === 'greedy-service';
+                        const issueType = isGreedy ? 'Massively Over-provisioned' :
+                            service.cpuThrottlingDetected ? 'Under-provisioned CPU' :
+                                service.memoryLeakDetected ? 'Memory Leak Risk' :
+                                    service.connectionPoolExhaustion ? 'Connection Pool Issue' : 'Idle Resources';
 
-                        const issueClass = service.cpuThrottlingDetected || service.memoryLeakDetected ?
+                        const issueClass = isGreedy ?
                             'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-red-100 dark:border-red-900' :
-                            'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-900';
+                            service.cpuThrottlingDetected || service.memoryLeakDetected ?
+                                'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-900' :
+                                'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border-amber-100 dark:border-amber-900';
 
                         tbody.innerHTML += `
                             <tr class="bg-white dark:bg-[#1d2832] hover:bg-slate-50 dark:hover:bg-[#233648] transition-colors">
@@ -500,11 +530,11 @@
                                         ${issueType}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
-                                    $${service.estimatedMonthlySavings.toFixed(2)}
+                                <td class="px-6 py-4 text-right font-mono font-bold ${service.estimatedMonthlySavings >= 0 ? 'text-green-600' : 'text-red-500'}">
+                                    ${service.estimatedMonthlySavings >= 0 ? '+' : '-'}$${Math.abs(service.estimatedMonthlySavings).toFixed(2)}
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <button class="text-primary hover:underline font-medium">Optimize</button>
+                                    <button onclick="window.location.href='recommendation-detail.html?service=${service.serviceName}'" class="text-primary hover:underline font-medium">Optimize</button>
                                 </td>
                             </tr>
                         `;

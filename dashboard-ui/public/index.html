@@ -333,7 +333,7 @@
                     <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="material-symbols-outlined text-green-600">savings</span>
-                            <span class="text-sm font-medium text-slate-500">Monthly Savings</span>
+                            <span class="text-sm font-medium text-slate-500">Net Monthly Savings</span>
                         </div>
                         <div class="text-3xl font-black text-green-600 total-savings">$0</div>
                     </div>
@@ -341,7 +341,7 @@
                     <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
                         <div class="flex items-center gap-2 mb-2">
                             <span class="material-symbols-outlined text-blue-600">trending_up</span>
-                            <span class="text-sm font-medium text-slate-500">Annual Savings</span>
+                            <span class="text-sm font-medium text-slate-500">Net Annual Savings</span>
                         </div>
                         <div class="text-3xl font-black text-blue-600" id="annual-savings">$0</div>
                     </div>
@@ -401,14 +401,14 @@
 
     <!-- Application Scripts -->
     <script src="services/api.js"></script>
-    <script src="services/app.js"></script>
+
     <script src="services/anomaly-monitor.js"></script>
     <script>
         // Mock data fallback
         const MOCK_DATA = {
-            servicesAnalyzed: 3,
-            totalMonthlySavings: 109.27,
-            totalAnnualSavings: 1311.24,
+            servicesAnalyzed: 4,
+            totalMonthlySavings: 97.00,
+            totalAnnualSavings: 1164.00,
             cpuHungryService: {
                 serviceName: 'cpu-hungry-service',
                 currentCpuRequest: '100m',
@@ -419,7 +419,7 @@
                 recommendedCpuLimit: '700m',
                 recommendedMemoryRequest: '256Mi',
                 recommendedMemoryLimit: '384Mi',
-                estimatedMonthlySavings: 35.50,
+                estimatedMonthlySavings: -15.50,
                 p95CpuUsage: 87.5,
                 p95MemoryUsage: 45.2,
                 cpuThrottlingDetected: true,
@@ -435,7 +435,7 @@
                 recommendedCpuLimit: '300m',
                 recommendedMemoryRequest: '384Mi',
                 recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 42.15,
+                estimatedMonthlySavings: -18.25,
                 p95CpuUsage: 35.8,
                 p95MemoryUsage: 78.9,
                 cpuThrottlingDetected: false,
@@ -451,12 +451,29 @@
                 recommendedCpuLimit: '400m',
                 recommendedMemoryRequest: '384Mi',
                 recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 31.62,
+                estimatedMonthlySavings: -11.75,
                 p95CpuUsage: 52.3,
                 p95MemoryUsage: 62.1,
                 cpuThrottlingDetected: false,
                 memoryLeakDetected: false,
                 connectionPoolExhaustion: true
+            },
+            greedyService: {
+                serviceName: 'greedy-service',
+                currentCpuRequest: '1000m',
+                currentCpuLimit: '2000m',
+                currentMemoryRequest: '2Gi',
+                currentMemoryLimit: '4Gi',
+                recommendedCpuRequest: '100m',
+                recommendedCpuLimit: '200m',
+                recommendedMemoryRequest: '256Mi',
+                recommendedMemoryLimit: '512Mi',
+                estimatedMonthlySavings: 142.50,
+                p95CpuUsage: 8.5,
+                p95MemoryUsage: 12.3,
+                cpuThrottlingDetected: false,
+                memoryLeakDetected: false,
+                connectionPoolExhaustion: false
             }
         };
 
@@ -496,7 +513,7 @@
                     tbody.innerHTML = '';
 
                     // Add rows for each analyzed service
-                    ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService'].forEach(key => {
+                    ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService', 'greedyService'].forEach(key => {
                         if (data[key]) {
                             const service = data[key];
 
@@ -543,7 +560,7 @@
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <span class="text-green-600 font-bold text-sm">$${Math.round(service.estimatedMonthlySavings)}/mo</span>
+                                    <span class="${service.estimatedMonthlySavings >= 0 ? 'text-green-600' : 'text-red-500'} font-bold text-sm">${service.estimatedMonthlySavings >= 0 ? '+' : '-'}$${Math.abs(Math.round(service.estimatedMonthlySavings))}/mo</span>
                                     <div class="text-xs text-slate-500 mt-1">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${badgeClass} border">
                                             <span class="material-symbols-outlined text-[14px] mr-1">${badgeIcon}</span>
@@ -666,10 +683,7 @@
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
         }
-        // Auto-refresh dashboard every 30 seconds
-        setInterval(() => {
-            if (typeof loadDashboard === 'function') loadDashboard();
-        }, 30000);
+
     </script>
 
 </body>

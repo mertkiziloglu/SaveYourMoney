@@ -236,16 +236,16 @@
     <script src="services/github-api.js"></script>
     <script>
         const MOCK_DATA = {
-            servicesAnalyzed: 3,
-            totalMonthlySavings: 109.27,
-            totalAnnualSavings: 1311.24,
+            servicesAnalyzed: 4,
+            totalMonthlySavings: 97.00,
+            totalAnnualSavings: 1164.00,
             cpuHungryService: {
                 serviceName: 'cpu-hungry-service',
                 currentCpuRequest: '100m', currentCpuLimit: '200m',
                 currentMemoryRequest: '256Mi', currentMemoryLimit: '512Mi',
                 recommendedCpuRequest: '350m', recommendedCpuLimit: '700m',
                 recommendedMemoryRequest: '256Mi', recommendedMemoryLimit: '384Mi',
-                estimatedMonthlySavings: 35.50,
+                estimatedMonthlySavings: -15.50,
                 p95CpuUsage: 87.5, p95MemoryUsage: 45.2,
                 cpuThrottlingDetected: true, memoryLeakDetected: false
             },
@@ -255,7 +255,7 @@
                 currentMemoryRequest: '256Mi', currentMemoryLimit: '512Mi',
                 recommendedCpuRequest: '150m', recommendedCpuLimit: '300m',
                 recommendedMemoryRequest: '384Mi', recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 42.15,
+                estimatedMonthlySavings: -18.25,
                 p95CpuUsage: 35.8, p95MemoryUsage: 78.9,
                 cpuThrottlingDetected: false, memoryLeakDetected: true
             },
@@ -265,10 +265,21 @@
                 currentMemoryRequest: '512Mi', currentMemoryLimit: '1Gi',
                 recommendedCpuRequest: '200m', recommendedCpuLimit: '400m',
                 recommendedMemoryRequest: '384Mi', recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 31.62,
+                estimatedMonthlySavings: -11.75,
                 p95CpuUsage: 52.3, p95MemoryUsage: 62.1,
                 cpuThrottlingDetected: false, memoryLeakDetected: false,
                 connectionPoolExhaustion: true
+            },
+            greedyService: {
+                serviceName: 'greedy-service',
+                currentCpuRequest: '1000m', currentCpuLimit: '2000m',
+                currentMemoryRequest: '2Gi', currentMemoryLimit: '4Gi',
+                recommendedCpuRequest: '100m', recommendedCpuLimit: '200m',
+                recommendedMemoryRequest: '256Mi', recommendedMemoryLimit: '512Mi',
+                estimatedMonthlySavings: 142.50,
+                p95CpuUsage: 8.5, p95MemoryUsage: 12.3,
+                cpuThrottlingDetected: false, memoryLeakDetected: false,
+                connectionPoolExhaustion: false
             }
         };
 
@@ -453,8 +464,8 @@
 
                     <div class="px-5 py-3 bg-slate-50/50 dark:bg-[#111a22]/50 border-t border-slate-200 dark:border-[#324d67] flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-green-600 text-lg">savings</span>
-                            <span class="text-green-600 dark:text-green-400 font-bold text-sm">-$${service.estimatedMonthlySavings.toFixed(0)}/mo</span>
+                            <span class="material-symbols-outlined ${service.estimatedMonthlySavings >= 0 ? 'text-green-600' : 'text-red-500'} text-lg">${service.estimatedMonthlySavings >= 0 ? 'savings' : 'trending_down'}</span>
+                            <span class="${service.estimatedMonthlySavings >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'} font-bold text-sm">${service.estimatedMonthlySavings >= 0 ? '+' : '-'}$${Math.abs(service.estimatedMonthlySavings).toFixed(0)}/mo</span>
                         </div>
                         <span class="text-primary text-xs font-bold flex items-center gap-1 hover:underline">
                             View Details
@@ -532,7 +543,7 @@
 
             currentData = data;
 
-            allServices = ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService']
+            allServices = ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService', 'greedyService']
                 .filter(key => data[key])
                 .map(key => data[key]);
 
@@ -550,7 +561,7 @@
             searchInput.addEventListener('input', () => {
                 const q = searchInput.value.toLowerCase();
                 const data = currentData || MOCK_DATA;
-                allServices = ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService']
+                allServices = ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService', 'greedyService']
                     .filter(key => data[key])
                     .map(key => data[key])
                     .filter(s => s.serviceName.toLowerCase().includes(q));

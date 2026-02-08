@@ -37,6 +37,9 @@ public class MetricsCollectorService {
     @Value("${analyzer.services.db-connection.url:http://localhost:8083}")
     private String dbConnectionUrl;
 
+    @Value("${analyzer.services.greedy.url:http://localhost:8086}")
+    private String greedyUrl;
+
     /**
      * Scheduled metrics collection - runs every 10 seconds
      */
@@ -48,6 +51,7 @@ public class MetricsCollectorService {
             collectServiceMetrics("cpu-hungry-service", cpuHungryUrl);
             collectServiceMetrics("memory-leaker-service", memoryLeakerUrl);
             collectServiceMetrics("db-connection-service", dbConnectionUrl);
+            collectServiceMetrics("greedy-service", greedyUrl);
 
             log.info("Metrics collection completed successfully");
         } catch (Exception e) {

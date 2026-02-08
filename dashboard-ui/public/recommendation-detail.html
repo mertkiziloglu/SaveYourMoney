@@ -451,16 +451,16 @@
     <script src="services/github-api.js"></script>
     <script>
         const MOCK_DATA = {
-            servicesAnalyzed: 3,
-            totalMonthlySavings: 109.27,
-            totalAnnualSavings: 1311.24,
+            servicesAnalyzed: 4,
+            totalMonthlySavings: 97.00,
+            totalAnnualSavings: 1164.00,
             cpuHungryService: {
                 serviceName: 'cpu-hungry-service',
                 currentCpuRequest: '100m', currentCpuLimit: '200m',
                 currentMemoryRequest: '256Mi', currentMemoryLimit: '512Mi',
                 recommendedCpuRequest: '350m', recommendedCpuLimit: '700m',
                 recommendedMemoryRequest: '256Mi', recommendedMemoryLimit: '384Mi',
-                estimatedMonthlySavings: 35.50,
+                estimatedMonthlySavings: -15.50,
                 p95CpuUsage: 87.5, p95MemoryUsage: 45.2,
                 cpuThrottlingDetected: true, memoryLeakDetected: false
             },
@@ -470,7 +470,7 @@
                 currentMemoryRequest: '256Mi', currentMemoryLimit: '512Mi',
                 recommendedCpuRequest: '150m', recommendedCpuLimit: '300m',
                 recommendedMemoryRequest: '384Mi', recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 42.15,
+                estimatedMonthlySavings: -18.25,
                 p95CpuUsage: 35.8, p95MemoryUsage: 78.9,
                 cpuThrottlingDetected: false, memoryLeakDetected: true
             },
@@ -480,12 +480,25 @@
                 currentMemoryRequest: '512Mi', currentMemoryLimit: '1Gi',
                 recommendedCpuRequest: '200m', recommendedCpuLimit: '400m',
                 recommendedMemoryRequest: '384Mi', recommendedMemoryLimit: '576Mi',
-                estimatedMonthlySavings: 31.62,
+                estimatedMonthlySavings: -11.75,
                 p95CpuUsage: 52.3, p95MemoryUsage: 62.1,
                 cpuThrottlingDetected: false, memoryLeakDetected: false,
                 connectionPoolExhaustion: true,
                 currentMaxPoolSize: 5, currentMinIdle: 2,
                 recommendedMaxPoolSize: 60, recommendedMinIdle: 12
+            },
+            greedyService: {
+                serviceName: 'greedy-service',
+                currentCpuRequest: '1000m', currentCpuLimit: '2000m',
+                currentMemoryRequest: '2Gi', currentMemoryLimit: '4Gi',
+                recommendedCpuRequest: '100m', recommendedCpuLimit: '200m',
+                recommendedMemoryRequest: '256Mi', recommendedMemoryLimit: '512Mi',
+                estimatedMonthlySavings: 142.50,
+                p95CpuUsage: 8.5, p95MemoryUsage: 12.3,
+                cpuThrottlingDetected: false, memoryLeakDetected: false,
+                connectionPoolExhaustion: false,
+                currentMaxPoolSize: 50, currentMinIdle: 20,
+                recommendedMaxPoolSize: 5, recommendedMinIdle: 2
             }
         };
 
@@ -498,7 +511,7 @@
         }
 
         function findServiceData(data, serviceName) {
-            for (const key of ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService']) {
+            for (const key of ['cpuHungryService', 'memoryLeakerService', 'dbConnectionService', 'greedyService']) {
                 if (data[key] && data[key].serviceName === serviceName) {
                     return data[key];
                 }
@@ -626,6 +639,9 @@
                 renderMemoryChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H);
             } else if (svc.includes('db-connection')) {
                 renderPoolChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H);
+            } else if (svc.includes('greedy')) {
+                renderGreedyCharts(service);
+                return; // greedy uses its own multi-chart layout
             } else {
                 renderCpuChart(service, container, titleEl, subtitleEl, avgLabel, avgValue, W, H);
             }
@@ -723,6 +739,115 @@
             });
         }
 
+        function renderGreedyCharts(service) {
+            // Replace single chart area with 3 separate charts
+            const chartCard = document.getElementById('chart-container').closest('.rounded-xl');
+            const W = 380, H = 120;
+
+            const parseMilli = (s) => parseInt((s || '100m').replace('m', ''));
+            const parseMi = (s) => {
+                if (!s) return 256;
+                if (s.includes('Gi')) return parseInt(s) * 1024;
+                return parseInt(s.replace('Mi', ''));
+            };
+
+            // --- CPU Chart Data ---
+            const cpuCurrent = parseMilli(service.currentCpuLimit);
+            const cpuRec = parseMilli(service.recommendedCpuLimit);
+            const cpuMax = cpuCurrent * 1.2;
+            const cpuUsage = [];
+            for (let i = 0; i < 30; i++) {
+                const base = cpuRec * 0.6;
+                const noise = cpuRec * 0.3 * Math.random();
+                cpuUsage.push(base + noise);
+            }
+            const cpuAvg = Math.round(cpuUsage.reduce((a, b) => a + b, 0) / cpuUsage.length);
+
+            // --- Memory Chart Data ---
+            const memCurrent = parseMi(service.currentMemoryLimit);
+            const memRec = parseMi(service.recommendedMemoryLimit);
+            const memMax = memCurrent * 1.2;
+            const memUsage = [];
+            for (let i = 0; i < 30; i++) {
+                const base = memRec * 0.5;
+                const noise = memRec * 0.25 * Math.random();
+                memUsage.push(base + noise);
+            }
+            const memAvg = Math.round(memUsage.reduce((a, b) => a + b, 0) / memUsage.length);
+
+            // --- DB Connection Chart Data ---
+            const dbCurrent = service.currentMaxPoolSize || 50;
+            const dbRec = service.recommendedMaxPoolSize || 5;
+            const dbMax = dbCurrent * 1.3;
+            const dbUsage = [];
+            for (let i = 0; i < 30; i++) {
+                const base = dbRec * 0.6;
+                const noise = dbRec * 0.3 * Math.random();
+                dbUsage.push(base + noise);
+            }
+            const dbPeak = Math.round(Math.max(...dbUsage));
+
+            chartCard.innerHTML = `
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-4 px-5 pt-5">Resource Usage — Over-Provisioned</h3>
+                <p class="text-xs text-slate-500 px-5 mb-4">Current allocations are far above actual usage. All 3 dimensions can be safely reduced.</p>
+
+                <div class="grid grid-cols-1 gap-4 px-5 pb-5">
+                    <!-- CPU Chart -->
+                    <div class="bg-slate-50 dark:bg-[#162031] rounded-lg p-3 border border-slate-200 dark:border-[#324d67]">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">CPU Usage</span>
+                            <span class="text-xs font-mono text-slate-500">Avg: ${cpuAvg}m / Limit: ${service.currentCpuLimit}</span>
+                        </div>
+                        <div class="relative h-24 w-full" id="greedy-cpu-chart"></div>
+                    </div>
+
+                    <!-- Memory Chart -->
+                    <div class="bg-slate-50 dark:bg-[#162031] rounded-lg p-3 border border-slate-200 dark:border-[#324d67]">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Memory Usage</span>
+                            <span class="text-xs font-mono text-slate-500">Avg: ${memAvg}Mi / Limit: ${service.currentMemoryLimit}</span>
+                        </div>
+                        <div class="relative h-24 w-full" id="greedy-mem-chart"></div>
+                    </div>
+
+                    <!-- DB Connections Chart -->
+                    <div class="bg-slate-50 dark:bg-[#162031] rounded-lg p-3 border border-slate-200 dark:border-[#324d67]">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">DB Connections</span>
+                            <span class="text-xs font-mono text-slate-500">Peak: ${dbPeak} / Pool: ${dbCurrent}</span>
+                        </div>
+                        <div class="relative h-24 w-full" id="greedy-db-chart"></div>
+                    </div>
+                </div>
+            `;
+
+            // Render each chart
+            const cpuContainer = document.getElementById('greedy-cpu-chart');
+            const memContainer = document.getElementById('greedy-mem-chart');
+            const dbContainer = document.getElementById('greedy-db-chart');
+
+            renderAreaChart(cpuContainer, cpuUsage, cpuMax, W, H, {
+                currentLimit: cpuCurrent, recommendedLimit: cpuRec,
+                currentLabel: `Limit: ${service.currentCpuLimit}`,
+                recLabel: `Rec: ${service.recommendedCpuLimit}`,
+                color: '#3b82f6'
+            });
+
+            renderAreaChart(memContainer, memUsage, memMax, W, H, {
+                currentLimit: memCurrent, recommendedLimit: memRec,
+                currentLabel: `Limit: ${service.currentMemoryLimit}`,
+                recLabel: `Rec: ${service.recommendedMemoryLimit}`,
+                color: '#8b5cf6'
+            });
+
+            renderAreaChart(dbContainer, dbUsage, dbMax, W, H, {
+                currentLimit: dbCurrent, recommendedLimit: dbRec,
+                currentLabel: `Pool: ${dbCurrent}`,
+                recLabel: `Rec: ${dbRec}`,
+                color: '#f59e0b'
+            });
+        }
+
         function renderAreaChart(container, usage, maxVal, W, H, opts) {
             const points = usage.length;
             const toY = (val) => H - (val / maxVal) * H;
@@ -804,10 +929,11 @@
             ];
 
             // Connection Pool config lines - always shown for all services
-            const currentPoolSize = service.currentMaxPoolSize || 5;
-            const currentMinIdle = service.currentMinIdle || 2;
-            const recommendedPoolSize = service.recommendedMaxPoolSize || currentPoolSize;
-            const recommendedMinIdle = service.recommendedMinIdle || currentMinIdle;
+            const isGreedySvc = (service.serviceName || '').includes('greedy');
+            const currentPoolSize = service.currentMaxPoolSize || (isGreedySvc ? 50 : 5);
+            const currentMinIdle = service.currentMinIdle || (isGreedySvc ? 20 : 2);
+            const recommendedPoolSize = service.recommendedMaxPoolSize || (isGreedySvc ? 5 : currentPoolSize);
+            const recommendedMinIdle = service.recommendedMinIdle || (isGreedySvc ? 2 : currentMinIdle);
             const poolSizeChanged = recommendedPoolSize !== currentPoolSize;
             const minIdleChanged = recommendedMinIdle !== currentMinIdle;
 
@@ -857,6 +983,61 @@
             leftHtml += currentPoolLines.map(l => renderLine(l)).join('');
             rightHtml += poolHeaderLines.map(l => renderLine(l)).join('');
             rightHtml += recommendedPoolLines.map(l => renderLine(l)).join('');
+
+            // HPA (Horizontal Pod Autoscaler) section - service-specific min/max pods
+            const svc = service.serviceName || '';
+            let hpaMin = 2, hpaMax = 4, hpaTargetCpu = 70;
+            if (svc.includes('cpu-hungry')) {
+                hpaMin = 3; hpaMax = 5; hpaTargetCpu = 60;
+            } else if (svc.includes('memory-leaker')) {
+                hpaMin = 2; hpaMax = 3; hpaTargetCpu = 75;
+            } else if (svc.includes('db-connection')) {
+                hpaMin = 2; hpaMax = 4; hpaTargetCpu = 70;
+            } else if (svc.includes('greedy')) {
+                hpaMin = 2; hpaMax = 3; hpaTargetCpu = 70;
+            }
+
+            const hpaHeaderLines = [
+                '',
+                '# --- hpa.yaml ---',
+                'apiVersion: autoscaling/v2',
+                'kind: HorizontalPodAutoscaler',
+                'metadata:',
+                `  name: ${service.serviceName}-hpa`,
+                'spec:',
+                `  scaleTargetRef:`,
+                `    apiVersion: apps/v1`,
+                `    kind: Deployment`,
+                `    name: ${service.serviceName}`,
+            ];
+
+            // For greedy: current is over-provisioned pods, otherwise no HPA
+            const isGreedy = (service.serviceName || '').includes('greedy');
+            const currentHpaLines = isGreedy ? [
+                { text: '  minReplicas: 6', type: 'remove' },
+                { text: '  maxReplicas: 10', type: 'remove' },
+                { text: '  # over-provisioned: too many replicas', type: 'remove' },
+            ] : [
+                { text: '  minReplicas: 1', type: 'remove' },
+                { text: '  maxReplicas: 1', type: 'remove' },
+                { text: '  # no autoscaling configured', type: 'remove' },
+            ];
+            const recommendedHpaLines = [
+                { text: `  minReplicas: ${hpaMin}`, type: 'add' },
+                { text: `  maxReplicas: ${hpaMax}`, type: 'add' },
+                { text: '  metrics:', type: 'add' },
+                { text: '  - type: Resource', type: 'add' },
+                { text: '    resource:', type: 'add' },
+                { text: '      name: cpu', type: 'add' },
+                { text: '      target:', type: 'add' },
+                { text: '        type: Utilization', type: 'add' },
+                { text: `        averageUtilization: ${hpaTargetCpu}`, type: 'add' },
+            ];
+
+            leftHtml += hpaHeaderLines.map(l => renderLine(l)).join('');
+            leftHtml += currentHpaLines.map(l => renderLine(l)).join('');
+            rightHtml += hpaHeaderLines.map(l => renderLine(l)).join('');
+            rightHtml += recommendedHpaLines.map(l => renderLine(l)).join('');
 
             container.innerHTML = `
             <div class="border-r border-slate-200 dark:border-[#30363d] overflow-x-auto code-scroll p-4">${leftHtml}</div>
@@ -915,11 +1096,39 @@
                 });
             }
 
+            // Service-specific horizontal architecture recommendation
+            const svcName = service.serviceName || '';
+            let hpaDesc = '';
+            let horizDesc = '';
+            if (svcName.includes('cpu-hungry')) {
+                hpaDesc = 'CPU-intensive workloads benefit most from horizontal scaling. Enable HPA (target CPU 70%) to distribute processing load across multiple pods instead of scaling vertically.';
+                horizDesc = 'Distribute CPU-bound computations across <strong>3–5 replicas</strong> with lower per-pod limits (100m). This reduces per-node resource pressure by ~60% and eliminates single-pod throttling.';
+            } else if (svcName.includes('memory-leaker')) {
+                hpaDesc = 'Horizontal scaling limits the blast radius of memory leaks. Each pod restarts independently, preventing cluster-wide OOM events.';
+                horizDesc = 'Run <strong>2–3 replicas</strong> with reduced memory limits (282Mi). If one pod leaks, others continue serving. Combined with pod lifecycle limits, this cuts memory waste by ~45%.';
+            } else if (svcName.includes('db-connection')) {
+                hpaDesc = 'Distribute connection pools across multiple pods. Each pod uses fewer connections, reducing database lock contention and improving throughput.';
+                horizDesc = 'Scale to <strong>2–4 replicas</strong> with <strong>5 connections each</strong> instead of 1 pod with 10. Total capacity stays the same but connection distribution improves latency by ~30%.';
+            } else if (svcName.includes('greedy')) {
+                hpaDesc = 'This service is massively over-provisioned across ALL dimensions. It requests 1000m CPU but uses only ~80m, 2Gi memory but uses only ~150Mi, and holds 50 DB connections while needing only ~3. Scale down to 2–3 pods with minimal resources.';
+                horizDesc = 'Reduce to <strong>2–3 replicas</strong> with <strong>right-sized limits</strong> (100m CPU, 256Mi memory, 5 connections each). Current allocation wastes ~90% of requested resources. Combined cost reduction: <strong>$142/mo ($1710/yr)</strong>.';
+            } else {
+                hpaDesc = 'With tighter CPU limits, enable Horizontal Pod Autoscaling (HPA) to handle burst traffic safely.';
+                horizDesc = 'Scale horizontally with <strong>2+ replicas</strong> to reduce per-pod resource needs and improve fault tolerance.';
+            }
+
             insights.push({
                 color: 'amber',
                 icon: 'speed',
                 title: 'HPA Recommended',
-                description: 'With tighter CPU limits, enable Horizontal Pod Autoscaling (HPA) to handle burst traffic safely.'
+                description: hpaDesc
+            });
+
+            insights.push({
+                color: 'green',
+                icon: 'lan',
+                title: 'Horizontal Architecture',
+                description: horizDesc
             });
 
             insights.push({
@@ -933,6 +1142,7 @@
                 indigo: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-100 dark:border-indigo-800', icon: 'text-indigo-600 dark:text-indigo-400', title: 'text-indigo-900 dark:text-indigo-300', desc: 'text-indigo-700 dark:text-indigo-200' },
                 amber: { bg: 'bg-amber-50 dark:bg-amber-900/10', border: 'border-amber-100 dark:border-amber-800', icon: 'text-amber-600 dark:text-amber-400', title: 'text-amber-900 dark:text-amber-300', desc: 'text-amber-700 dark:text-amber-200' },
                 red: { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-100 dark:border-red-800', icon: 'text-red-600 dark:text-red-400', title: 'text-red-900 dark:text-red-300', desc: 'text-red-700 dark:text-red-200' },
+                green: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', border: 'border-emerald-100 dark:border-emerald-800', icon: 'text-emerald-600 dark:text-emerald-400', title: 'text-emerald-900 dark:text-emerald-300', desc: 'text-emerald-700 dark:text-emerald-200' },
                 slate: { bg: 'bg-surface-light dark:bg-[#1d2832]', border: 'border-slate-200 dark:border-[#324d67]', icon: 'text-slate-400', title: 'text-slate-900 dark:text-white', desc: 'text-slate-500 dark:text-slate-400' },
             };
 
@@ -976,7 +1186,14 @@
             Last deployed: <span class="text-slate-700 dark:text-slate-300">2h ago</span>
         `;
 
-            document.getElementById('projected-savings').innerHTML = `-$${service.estimatedMonthlySavings.toFixed(2)}<span class="text-sm font-normal text-slate-400">/mo</span>`;
+            const savingsEl = document.getElementById('projected-savings');
+            if (service.estimatedMonthlySavings >= 0) {
+                savingsEl.innerHTML = `+$${service.estimatedMonthlySavings.toFixed(2)}<span class="text-sm font-normal text-slate-400">/mo</span>`;
+                savingsEl.className = 'text-3xl font-black text-green-600';
+            } else {
+                savingsEl.innerHTML = `-$${Math.abs(service.estimatedMonthlySavings).toFixed(2)}<span class="text-sm font-normal text-slate-400">/mo</span>`;
+                savingsEl.className = 'text-3xl font-black text-red-500';
+            }
 
             renderServiceChart(service);
 

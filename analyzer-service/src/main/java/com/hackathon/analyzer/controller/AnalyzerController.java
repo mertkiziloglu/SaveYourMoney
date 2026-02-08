@@ -45,13 +45,12 @@ public class AnalyzerController {
      */
     @Operation(summary = "Analyze Service", description = "Analyze a specific microservice and generate optimization recommendations")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Analysis completed successfully"),
-        @ApiResponse(responseCode = "404", description = "Service not found")
+            @ApiResponse(responseCode = "200", description = "Analysis completed successfully"),
+            @ApiResponse(responseCode = "404", description = "Service not found")
     })
     @PostMapping("/analyze/{serviceName}")
     public ResponseEntity<ResourceRecommendation> analyzeService(
-            @Parameter(description = "Service name (e.g., cpu-hungry-service)")
-            @PathVariable String serviceName) {
+            @Parameter(description = "Service name (e.g., cpu-hungry-service)") @PathVariable String serviceName) {
         log.info("Received analysis request for service: {}", serviceName);
 
         ResourceRecommendation recommendation = analyzerService.analyzeService(serviceName);
@@ -77,6 +76,8 @@ public class AnalyzerController {
                 analyzerService.analyzeService("memory-leaker-service"));
         recommendations.put("db-connection-service",
                 analyzerService.analyzeService("db-connection-service"));
+        recommendations.put("greedy-service",
+                analyzerService.analyzeService("greedy-service"));
 
         log.info("All services analyzed successfully");
 
@@ -144,6 +145,7 @@ public class AnalyzerController {
         Optional<AnalysisResult> cpuAnalysis = analyzerService.getLatestAnalysis("cpu-hungry-service");
         Optional<AnalysisResult> memoryAnalysis = analyzerService.getLatestAnalysis("memory-leaker-service");
         Optional<AnalysisResult> dbAnalysis = analyzerService.getLatestAnalysis("db-connection-service");
+        Optional<AnalysisResult> greedyAnalysis = analyzerService.getLatestAnalysis("greedy-service");
 
         // Calculate total savings
         double totalSavings = 0.0;
@@ -161,6 +163,10 @@ public class AnalyzerController {
             totalSavings += dbAnalysis.get().getEstimatedMonthlySavings();
             servicesAnalyzed++;
         }
+        if (greedyAnalysis.isPresent()) {
+            totalSavings += greedyAnalysis.get().getEstimatedMonthlySavings();
+            servicesAnalyzed++;
+        }
 
         dashboard.put("servicesAnalyzed", servicesAnalyzed);
         dashboard.put("totalMonthlySavings", totalSavings);
@@ -168,27 +174,24 @@ public class AnalyzerController {
         dashboard.put("cpuHungryService", cpuAnalysis.orElse(null));
         dashboard.put("memoryLeakerService", memoryAnalysis.orElse(null));
         dashboard.put("dbConnectionService", dbAnalysis.orElse(null));
+        dashboard.put("greedyService", greedyAnalysis.orElse(null));
 
         return ResponseEntity.ok(dashboard);
     }
 
     // ========== AI/ML Prediction Endpoints ==========
 
-    @Operation(
-        summary = "Predict Future Costs",
-        description = "AI-powered cost forecasting using Holt-Winters time-series analysis. " +
-                     "Predicts future costs based on historical metrics and trends."
-    )
+    @Operation(summary = "Predict Future Costs", description = "AI-powered cost forecasting using Holt-Winters time-series analysis. "
+            +
+            "Predicts future costs based on historical metrics and trends.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Cost forecast generated successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid parameters")
+            @ApiResponse(responseCode = "200", description = "Cost forecast generated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid parameters")
     })
     @GetMapping("/predict/costs/{serviceName}")
     public ResponseEntity<CostForecast> predictCosts(
-            @Parameter(description = "Service name to predict costs for")
-            @PathVariable String serviceName,
-            @Parameter(description = "Number of days to forecast (default: 30)")
-            @RequestParam(defaultValue = "30") int daysAhead) {
+            @Parameter(description = "Service name to predict costs for") @PathVariable String serviceName,
+            @Parameter(description = "Number of days to forecast (default: 30)") @RequestParam(defaultValue = "30") int daysAhead) {
 
         if (daysAhead < 1 || daysAhead > 90) {
             log.warn("Invalid daysAhead parameter: {}. Must be between 1-90", daysAhead);
@@ -208,17 +211,14 @@ public class AnalyzerController {
         return ResponseEntity.ok(forecast);
     }
 
-    @Operation(
-        summary = "Classify Workload Pattern",
-        description = "ML-based workload pattern classification using feature engineering and clustering. " +
-                     "Analyzes 7 days of metrics to identify patterns (STEADY, BURSTY, PERIODIC, etc.) " +
-                     "and recommends optimal resource strategies."
-    )
+    @Operation(summary = "Classify Workload Pattern", description = "ML-based workload pattern classification using feature engineering and clustering. "
+            +
+            "Analyzes 7 days of metrics to identify patterns (STEADY, BURSTY, PERIODIC, etc.) " +
+            "and recommends optimal resource strategies.")
     @ApiResponse(responseCode = "200", description = "Workload classification completed successfully")
     @GetMapping("/classify/workload/{serviceName}")
     public ResponseEntity<WorkloadProfile> classifyWorkload(
-            @Parameter(description = "Service name to classify")
-            @PathVariable String serviceName) {
+            @Parameter(description = "Service name to classify") @PathVariable String serviceName) {
 
         log.info("Workload classification requested for {}", serviceName);
 
@@ -233,16 +233,13 @@ public class AnalyzerController {
         return ResponseEntity.ok(profile);
     }
 
-    @Operation(
-        summary = "Get AI Insights Dashboard",
-        description = "Comprehensive AI-powered insights combining cost predictions, " +
-                     "workload classification, anomaly detection, and resource recommendations"
-    )
+    @Operation(summary = "Get AI Insights Dashboard", description = "Comprehensive AI-powered insights combining cost predictions, "
+            +
+            "workload classification, anomaly detection, and resource recommendations")
     @ApiResponse(responseCode = "200", description = "AI insights retrieved successfully")
     @GetMapping("/ai/insights/{serviceName}")
     public ResponseEntity<Map<String, Object>> getAIInsights(
-            @Parameter(description = "Service name")
-            @PathVariable String serviceName) {
+            @Parameter(description = "Service name") @PathVariable String serviceName) {
 
         log.info("AI insights requested for {}", serviceName);
 
@@ -284,7 +281,8 @@ public class AnalyzerController {
         Map<String, String> aiSummary = new HashMap<>();
         aiSummary.put("serviceName", serviceName);
         aiSummary.put("generatedAt", LocalDateTime.now().toString());
-        aiSummary.put("aiModelsUsed", "Holt-Winters Forecasting, K-Means Classification, Statistical Anomaly Detection");
+        aiSummary.put("aiModelsUsed",
+                "Holt-Winters Forecasting, K-Means Classification, Statistical Anomaly Detection");
 
         insights.put("summary", aiSummary);
 
@@ -293,17 +291,15 @@ public class AnalyzerController {
         return ResponseEntity.ok(insights);
     }
 
-    @Operation(
-        summary = "Get All Services AI Overview",
-        description = "AI-powered overview of all monitored services with predictions and classifications"
-    )
+    @Operation(summary = "Get All Services AI Overview", description = "AI-powered overview of all monitored services with predictions and classifications")
     @ApiResponse(responseCode = "200", description = "Overview retrieved successfully")
     @GetMapping("/ai/overview")
     public ResponseEntity<Map<String, Object>> getAIOverview() {
         log.info("AI overview requested for all services");
 
         Map<String, Object> overview = new HashMap<>();
-        List<String> services = Arrays.asList("cpu-hungry-service", "memory-leaker-service", "db-connection-service");
+        List<String> services = Arrays.asList("cpu-hungry-service", "memory-leaker-service", "db-connection-service",
+                "greedy-service");
 
         List<Map<String, Object>> serviceInsights = new ArrayList<>();
         double totalPredictedCosts = 0.0;
@@ -341,7 +337,7 @@ public class AnalyzerController {
         overview.put("totalCurrentMonthlyCost", totalCurrentCosts);
         overview.put("totalPredictedMonthlyCost", totalPredictedCosts);
         overview.put("costChangePercentage",
-            totalCurrentCosts > 0 ? ((totalPredictedCosts - totalCurrentCosts) / totalCurrentCosts * 100) : 0.0);
+                totalCurrentCosts > 0 ? ((totalPredictedCosts - totalCurrentCosts) / totalCurrentCosts * 100) : 0.0);
         overview.put("generatedAt", LocalDateTime.now());
 
         log.info("AI overview generated: ${} current → ${} predicted",
