@@ -453,17 +453,27 @@
                 const monthlySpend = 500; // Base cost
                 const monthlySavings = data.totalMonthlySavings || 0;
 
-                // Calculate YTD: months elapsed since Jan 1st of current year
+                // Calculate YTD: exact days elapsed since Jan 1st of current year
                 const now = new Date();
                 const startOfYear = new Date(now.getFullYear(), 0, 1);
-                const msElapsed = now - startOfYear;
-                const monthsElapsed = msElapsed / (1000 * 60 * 60 * 24 * 30.44); // average month
-                const ytdSavings = monthlySavings * monthsElapsed;
+                const msPerDay = 1000 * 60 * 60 * 24;
+                const daysElapsed = Math.floor((now - startOfYear) / msPerDay);
+                const dailySavings = monthlySavings / 30.44; // daily rate from monthly savings
+                const ytdSavings = dailySavings * daysElapsed;
+
+                // Calculate year progress for the progress bar
+                const endOfYear = new Date(now.getFullYear(), 11, 31);
+                const totalDaysInYear = Math.floor((endOfYear - startOfYear) / msPerDay) + 1;
+                const yearProgress = ((daysElapsed / totalDaysInYear) * 100).toFixed(0);
 
                 // Update summary cards
                 document.getElementById('monthly-spend').textContent = '$' + monthlySpend.toFixed(2);
                 document.getElementById('potential-savings').textContent = '$' + monthlySavings.toFixed(2);
                 document.getElementById('total-savings').textContent = '$' + Math.round(ytdSavings);
+
+                // Update YTD progress bar dynamically
+                const ytdBar = document.querySelector('#total-savings').closest('.bg-surface-light, [class*="bg-surface"]').querySelector('.bg-blue-500');
+                if (ytdBar) ytdBar.style.width = yearProgress + '%';
 
                 const savingsPercent = ((monthlySavings / monthlySpend) * 100).toFixed(1);
                 document.getElementById('savings-percent').textContent = savingsPercent + '% of spend';
