@@ -40,6 +40,13 @@ analyzer:
     db-connection:
       url: http://localhost:8083
 
+  # Dynamic Service Discovery Configuration
+  discovery:
+    scan-enabled: true
+    scan-host: localhost
+    port-range-start: 8080
+    port-range-end: 8099
+
 # Actuator Configuration
 management:
   endpoints:
@@ -50,6 +57,13 @@ management:
   endpoint:
     health:
       show-details: always
+
+# AI API Configuration (Anthropic SDK compatible proxy)
+ai:
+  api-key: ${AI_API_KEY:sk-4a2814af1df6436aa2bf93b1d800dc26}
+  base-url: ${AI_BASE_URL:http://127.0.0.1:8045}
+  model: ${AI_MODEL:gemini-3-pro-high}
+  enabled: true
 
 # Logging
 logging:

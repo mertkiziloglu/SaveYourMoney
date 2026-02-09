@@ -1,11 +1,12 @@
 package com.hackathon.analyzer.collector;
 
+import com.hackathon.analyzer.discovery.ServiceDiscoveryService;
+import com.hackathon.analyzer.discovery.ServiceInfo;
 import com.hackathon.analyzer.model.MetricsSnapshot;
 import com.hackathon.analyzer.repository.MetricsSnapshotRepository;
 import com.hackathon.analyzer.service.AnomalyDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -27,33 +28,36 @@ public class MetricsCollectorService {
     private final MetricsSnapshotRepository metricsRepository;
     private final WebClient.Builder webClientBuilder;
     private final AnomalyDetectionService anomalyDetectionService;
-
-    @Value("${analyzer.services.cpu-hungry.url:http://localhost:8081}")
-    private String cpuHungryUrl;
-
-    @Value("${analyzer.services.memory-leaker.url:http://localhost:8082}")
-    private String memoryLeakerUrl;
-
-    @Value("${analyzer.services.db-connection.url:http://localhost:8083}")
-    private String dbConnectionUrl;
-
-    @Value("${analyzer.services.greedy.url:http://localhost:8086}")
-    private String greedyUrl;
+    private final ServiceDiscoveryService serviceDiscoveryService;
 
     /**
      * Scheduled metrics collection - runs every 10 seconds
+     * Now dynamically collects from all discovered services
      */
     @Scheduled(fixedDelay = 10000, initialDelay = 5000)
     public void collectMetrics() {
         log.debug("Starting metrics collection cycle...");
 
         try {
-            collectServiceMetrics("cpu-hungry-service", cpuHungryUrl);
-            collectServiceMetrics("memory-leaker-service", memoryLeakerUrl);
-            collectServiceMetrics("db-connection-service", dbConnectionUrl);
-            collectServiceMetrics("greedy-service", greedyUrl);
+            List<ServiceInfo> healthyServices = serviceDiscoveryService.getHealthyServices();
 
-            log.info("Metrics collection completed successfully");
+            if (healthyServices.isEmpty()) {
+                log.warn("No healthy services found for metrics collection");
+                return;
+            }
+
+            int collected = 0;
+            for (ServiceInfo service : healthyServices) {
+                try {
+                    collectServiceMetrics(service.getName(), service.getUrl());
+                    collected++;
+                } catch (Exception e) {
+                    log.warn("Failed to collect metrics from {}: {}", service.getName(), e.getMessage());
+                }
+            }
+
+            log.info("Metrics collection completed. Collected from {}/{} services",
+                    collected, healthyServices.size());
         } catch (Exception e) {
             log.error("Error during metrics collection: {}", e.getMessage(), e);
         }

@@ -1,9 +1,12 @@
 package com.hackathon.analyzer.controller;
 
 import com.hackathon.analyzer.collector.MetricsCollectorService;
+import com.hackathon.analyzer.discovery.ServiceDiscoveryService;
+import com.hackathon.analyzer.discovery.ServiceInfo;
 import com.hackathon.analyzer.ml.CostPredictionService;
 import com.hackathon.analyzer.ml.WorkloadClassificationService;
 import com.hackathon.analyzer.model.*;
+import com.hackathon.analyzer.service.GeminiInsightService;
 import com.hackathon.analyzer.service.ResourceAnalyzerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +32,8 @@ public class AnalyzerController {
     private final MetricsCollectorService metricsCollector;
     private final CostPredictionService costPredictionService;
     private final WorkloadClassificationService workloadClassificationService;
+    private final GeminiInsightService geminiInsightService;
+    private final ServiceDiscoveryService serviceDiscoveryService;
 
     @Operation(summary = "Health Check", description = "Check if the analyzer service is running")
     @ApiResponse(responseCode = "200", description = "Service is healthy")
@@ -62,7 +67,7 @@ public class AnalyzerController {
     }
 
     /**
-     * Analyze all services
+     * Analyze all services - now dynamically discovers services
      */
     @PostMapping("/analyze-all")
     public ResponseEntity<Map<String, ResourceRecommendation>> analyzeAllServices() {
@@ -70,16 +75,16 @@ public class AnalyzerController {
 
         Map<String, ResourceRecommendation> recommendations = new HashMap<>();
 
-        recommendations.put("cpu-hungry-service",
-                analyzerService.analyzeService("cpu-hungry-service"));
-        recommendations.put("memory-leaker-service",
-                analyzerService.analyzeService("memory-leaker-service"));
-        recommendations.put("db-connection-service",
-                analyzerService.analyzeService("db-connection-service"));
-        recommendations.put("greedy-service",
-                analyzerService.analyzeService("greedy-service"));
+        for (ServiceInfo service : serviceDiscoveryService.getHealthyServices()) {
+            try {
+                recommendations.put(service.getName(),
+                        analyzerService.analyzeService(service.getName()));
+            } catch (Exception e) {
+                log.warn("Failed to analyze service {}: {}", service.getName(), e.getMessage());
+            }
+        }
 
-        log.info("All services analyzed successfully");
+        log.info("Analyzed {} services successfully", recommendations.size());
 
         return ResponseEntity.ok(recommendations);
     }
@@ -135,46 +140,31 @@ public class AnalyzerController {
     }
 
     /**
-     * Get overall dashboard summary
+     * Get overall dashboard summary - now dynamically includes all discovered services
      */
     @GetMapping("/dashboard")
     public ResponseEntity<Map<String, Object>> getDashboard() {
         Map<String, Object> dashboard = new HashMap<>();
 
-        // Get latest analysis for all services
-        Optional<AnalysisResult> cpuAnalysis = analyzerService.getLatestAnalysis("cpu-hungry-service");
-        Optional<AnalysisResult> memoryAnalysis = analyzerService.getLatestAnalysis("memory-leaker-service");
-        Optional<AnalysisResult> dbAnalysis = analyzerService.getLatestAnalysis("db-connection-service");
-        Optional<AnalysisResult> greedyAnalysis = analyzerService.getLatestAnalysis("greedy-service");
-
-        // Calculate total savings
+        List<ServiceInfo> services = serviceDiscoveryService.getHealthyServices();
         double totalSavings = 0.0;
         int servicesAnalyzed = 0;
+        Map<String, AnalysisResult> serviceAnalyses = new HashMap<>();
 
-        if (cpuAnalysis.isPresent()) {
-            totalSavings += cpuAnalysis.get().getEstimatedMonthlySavings();
-            servicesAnalyzed++;
-        }
-        if (memoryAnalysis.isPresent()) {
-            totalSavings += memoryAnalysis.get().getEstimatedMonthlySavings();
-            servicesAnalyzed++;
-        }
-        if (dbAnalysis.isPresent()) {
-            totalSavings += dbAnalysis.get().getEstimatedMonthlySavings();
-            servicesAnalyzed++;
-        }
-        if (greedyAnalysis.isPresent()) {
-            totalSavings += greedyAnalysis.get().getEstimatedMonthlySavings();
-            servicesAnalyzed++;
+        for (ServiceInfo service : services) {
+            Optional<AnalysisResult> analysis = analyzerService.getLatestAnalysis(service.getName());
+            if (analysis.isPresent()) {
+                totalSavings += analysis.get().getEstimatedMonthlySavings();
+                servicesAnalyzed++;
+                serviceAnalyses.put(service.getName(), analysis.get());
+            }
         }
 
         dashboard.put("servicesAnalyzed", servicesAnalyzed);
+        dashboard.put("totalRegisteredServices", services.size());
         dashboard.put("totalMonthlySavings", totalSavings);
         dashboard.put("totalAnnualSavings", totalSavings * 12);
-        dashboard.put("cpuHungryService", cpuAnalysis.orElse(null));
-        dashboard.put("memoryLeakerService", memoryAnalysis.orElse(null));
-        dashboard.put("dbConnectionService", dbAnalysis.orElse(null));
-        dashboard.put("greedyService", greedyAnalysis.orElse(null));
+        dashboard.put("services", serviceAnalyses);
 
         return ResponseEntity.ok(dashboard);
     }
@@ -298,14 +288,14 @@ public class AnalyzerController {
         log.info("AI overview requested for all services");
 
         Map<String, Object> overview = new HashMap<>();
-        List<String> services = Arrays.asList("cpu-hungry-service", "memory-leaker-service", "db-connection-service",
-                "greedy-service");
+        List<ServiceInfo> services = serviceDiscoveryService.getHealthyServices();
 
         List<Map<String, Object>> serviceInsights = new ArrayList<>();
         double totalPredictedCosts = 0.0;
         double totalCurrentCosts = 0.0;
 
-        for (String serviceName : services) {
+        for (ServiceInfo service : services) {
+            String serviceName = service.getName();
             Map<String, Object> serviceData = new HashMap<>();
             serviceData.put("serviceName", serviceName);
 
@@ -345,5 +335,91 @@ public class AnalyzerController {
                 String.format("%.2f", totalPredictedCosts));
 
         return ResponseEntity.ok(overview);
+    }
+
+    // ========== Gemini AI Endpoints ==========
+
+    @Operation(summary = "Get Gemini AI Optimization Insight",
+            description = "Generate AI-powered optimization recommendations using Google Gemini 2.0 Flash. " +
+                    "Provides detailed analysis in Turkish with specific resource recommendations.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Gemini insight generated successfully"),
+            @ApiResponse(responseCode = "503", description = "Gemini API not configured or unavailable")
+    })
+    @GetMapping("/gemini/insight/{serviceName}")
+    public ResponseEntity<Map<String, Object>> getGeminiInsight(
+            @Parameter(description = "Service name to analyze") @PathVariable String serviceName) {
+
+        log.info("Gemini insight requested for {}", serviceName);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("serviceName", serviceName);
+        response.put("generatedAt", LocalDateTime.now().toString());
+        response.put("geminiEnabled", geminiInsightService.isConfigured());
+
+        if (!geminiInsightService.isConfigured()) {
+            response.put("insight", null);
+            response.put("message", "Gemini API is not configured. Set GEMINI_API_KEY environment variable.");
+            return ResponseEntity.ok(response);
+        }
+
+        try {
+            // Get latest analysis data
+            Optional<AnalysisResult> latestAnalysis = analyzerService.getLatestAnalysis(serviceName);
+            CostForecast costForecast = costPredictionService.predictCosts(serviceName, 30);
+
+            double cpuUsage = latestAnalysis.map(a -> a.getP95CpuUsage() != null ? a.getP95CpuUsage() : 0.0).orElse(0.0);
+            double memoryUsage = latestAnalysis.map(a -> a.getP95MemoryUsage() != null ? a.getP95MemoryUsage() : 0.0).orElse(0.0);
+            double monthlyCost = costForecast.getCurrentMonthlyCost();
+            double savings = latestAnalysis.map(AnalysisResult::getEstimatedMonthlySavings).orElse(0.0);
+            double confidence = latestAnalysis.map(AnalysisResult::getConfidenceScore).orElse(0.0);
+
+            // Build detected issues map
+            Map<String, String> detectedIssues = new HashMap<>();
+            latestAnalysis.ifPresent(analysis -> {
+                if (Boolean.TRUE.equals(analysis.getCpuThrottlingDetected())) {
+                    detectedIssues.put("CPU Throttling", "CPU usage exceeds limits");
+                }
+                if (Boolean.TRUE.equals(analysis.getMemoryLeakDetected())) {
+                    detectedIssues.put("Memory Leak", "Memory shows continuous growth");
+                }
+                if (Boolean.TRUE.equals(analysis.getConnectionPoolExhaustion())) {
+                    detectedIssues.put("Connection Pool", "Pool frequently exhausted");
+                }
+            });
+
+            String geminiInsight = geminiInsightService.generateOptimizationInsight(
+                    serviceName, cpuUsage, memoryUsage, monthlyCost, savings, confidence, detectedIssues);
+
+            response.put("insight", geminiInsight);
+            response.put("analysisData", Map.of(
+                    "cpuUsagePercent", cpuUsage,
+                    "memoryUsageMb", memoryUsage,
+                    "monthlyCost", monthlyCost,
+                    "estimatedSavings", savings,
+                    "confidenceScore", confidence,
+                    "detectedIssues", detectedIssues
+            ));
+
+            log.info("Gemini insight generated successfully for {}", serviceName);
+
+        } catch (Exception e) {
+            log.error("Error generating Gemini insight for {}: {}", serviceName, e.getMessage());
+            response.put("insight", null);
+            response.put("error", "Failed to generate insight: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get AI Status", description = "Check if AI API is configured and available")
+    @ApiResponse(responseCode = "200", description = "Status retrieved")
+    @GetMapping("/gemini/status")
+    public ResponseEntity<Map<String, Object>> getGeminiStatus() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("configured", geminiInsightService.isConfigured());
+        status.put("model", geminiInsightService.getModel());
+        status.put("provider", "Antigravity Proxy (Anthropic SDK compatible)");
+        return ResponseEntity.ok(status);
     }
 }

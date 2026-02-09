@@ -86,7 +86,7 @@ class MetricsCollectorServiceTest {
 
                 metricsCollectorService.collectMetrics();
 
-                verify(metricsRepository, times(3)).save(any(MetricsSnapshot.class));
+                verify(metricsRepository, times(4)).save(any(MetricsSnapshot.class));
         }
 
         @Test
@@ -121,7 +121,7 @@ class MetricsCollectorServiceTest {
 
                 metricsCollectorService.collectMetrics();
 
-                verify(metricsRepository, times(3)).save(any(MetricsSnapshot.class));
+                verify(metricsRepository, times(4)).save(any(MetricsSnapshot.class));
         }
 
         @Test
